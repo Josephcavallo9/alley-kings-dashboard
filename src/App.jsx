@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 
 const ODDS_API_KEY = process.env.REACT_APP_ODDS_API_KEY;
-const NEWSDATA_API_KEY = process.env.REACT_APP_NEWSDATA_API_KEY;
+
 
 const storyFilters = ["ALL", "BREAKING", "CULTURE", "TRADES", "SCORES", "VIRAL"];
 const clipFilters = ["ALL", "LIVE", "SCHEDULED", "DRAFTS"];
