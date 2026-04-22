@@ -1,5 +1,4 @@
-[[redirects]]
-  from = "/api/news"
-  to = "https://gnews.io/api/v4/search?q=NBA+OR+NFL+OR+MLB+OR+NHL+OR+UFC+OR+sports&lang=en&max=20&sortby=publishedAt&token=:token"
-  status = 200
-  force = true
+[build]
+  command = "npm run build"
+  publish = "build"
+  functions = "netlify/functions"
