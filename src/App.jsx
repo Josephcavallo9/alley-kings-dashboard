@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-
+import { supabase } from './supabase';
 const ODDS_API_KEY = process.env.REACT_APP_ODDS_API_KEY;
-
+const NEWSDATA_API_KEY = process.env.REACT_APP_NEWSDATA_API_KEY;
 
 const storyFilters = ["ALL", "BREAKING", "CULTURE", "TRADES", "SCORES", "VIRAL"];
 const clipFilters = ["ALL", "LIVE", "SCHEDULED", "DRAFTS"];
@@ -145,6 +145,8 @@ export default function AlleyKingsDashboard() {
   const [storyFilter, setStoryFilter] = useState("ALL");
   const [clipFilter, setClipFilter] = useState("ALL");
   const [betFilter, setBetFilter] = useState("ALL");
+  const [dbBets, setDbBets] = useState([]);
+  const [dbClips, setDbClips] = useState([]);
   const [articles, setArticles] = useState([]);
   const [games, setGames] = useState([]);
   const [scores, setScores] = useState([]);
@@ -152,7 +154,15 @@ export default function AlleyKingsDashboard() {
   const [tickerHeadlines, setTickerHeadlines] = useState(["Loading latest sports news..."]);
   const [loading, setLoading] = useState(true);
   const [oddsLoading, setOddsLoading] = useState(true);
-
+useEffect(() => {
+    const fetchDbData = async () => {
+      const { data: betsData } = await supabase.from("bets").select("*").order("created_at", { ascending: false });
+      const { data: clipsData } = await supabase.from("clips").select("*").order("created_at", { ascending: false });
+      if (betsData) setDbBets(betsData);
+      if (clipsData) setDbClips(clipsData);
+    };
+    fetchDbData();
+  }, []);
   useEffect(() => {
     const fetchAllData = async () => {
       try {
@@ -225,8 +235,8 @@ export default function AlleyKingsDashboard() {
   const filteredGames = activeSport === "ALL" ? games : games.filter(g => g.sportConfig.label === activeSport);
   const filteredScores = activeSport === "ALL" ? scores : scores.filter(g => g.sportConfig.label === activeSport);
   const filteredArticles = storyFilter === "ALL" ? articles : articles.filter(a => categorizeArticle(a).type === storyFilter);
-  const filteredClips = clipFilter === "ALL" ? clips : clips.filter(c => clipFilter === "DRAFTS" ? c.status === "DRAFT" : c.status === clipFilter);
-  const filteredBets = betFilter === "ALL" ? bets : ["PENDING", "WON", "LOST"].includes(betFilter) ? bets.filter(b => b.status === betFilter) : bets.filter(b => b.bettor.toUpperCase() === betFilter);
+  const filteredClips = clipFilter === "ALL" ? dbClips : dbClips.filter(c => clipFilter === "DRAFTS" ? c.status === "DRAFT" : c.status === clipFilter);
+  const filteredBets = betFilter === "ALL" ? dbBets : ["PENDING", "WON", "LOST"].includes(betFilter) ? dbBets.filter(b => b.status === betFilter) : dbBets.filter(b => b.bettor.toUpperCase() === betFilter);
 
   const newsTickerString = tickerHeadlines.join("     •     ");
   const oddsTickerString = oddsTicker.length > 0 ? oddsTicker.join("          |          ") : "Loading odds...";
@@ -576,7 +586,7 @@ export default function AlleyKingsDashboard() {
                       </div>
                       <div style={{ textAlign: "right" }}>
                         <div style={{ fontSize: 9, color: "#888" }}>TO WIN</div>
-                        <div style={{ fontSize: 18, fontWeight: 900, color: "#3B82F6" }}>${b.toWin.toFixed(2)}</div>
+                        <div style={{ fontSize: 18, fontWeight: 900, color: "#3B82F6" }}>${parseFloat(b.to_win || b.toWin || 0).toFixed(2)}</div>
                       </div>
                     </div>
                     <div style={{ fontSize: 11, color: "#888", fontStyle: "italic" }}>💬 {b.note}</div>
