@@ -534,7 +534,7 @@ useEffect(() => {
               <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
                 <div style={{ width: 4, height: 28, background: "#E8192C", borderRadius: 2 }} />
                 <span style={{ fontSize: 22, fontWeight: 900 }}>ALL BETS</span>
-                <span style={{ background: "#E8192C", color: "white", fontSize: 10, fontWeight: 800, padding: "2px 7px", borderRadius: 10 }}>{bets.length}</span>
+                <span style={{ background: "#E8192C", color: "white", fontSize: 10, fontWeight: 800, padding: "2px 7px", borderRadius: 10 }}>{dbBets.length}</span>
               </div>
               <div className="filter-scroll" style={{ margin: "0 -16px", paddingLeft: 16, paddingBottom: 10 }}>
                 {betFilters.map(f => (
