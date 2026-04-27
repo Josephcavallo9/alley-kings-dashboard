@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from './supabase';
 const ODDS_API_KEY = process.env.REACT_APP_ODDS_API_KEY;
-const NEWSDATA_API_KEY = process.env.REACT_APP_NEWSDATA_API_KEY;
 
 const storyFilters = ["ALL", "BREAKING", "CULTURE", "TRADES", "SCORES", "VIRAL"];
 const clipFilters = ["ALL", "LIVE", "SCHEDULED", "DRAFTS"];
@@ -13,13 +12,6 @@ const members = [
   { name: "Deon", color: "#A855F7", emoji: "🎯", wins: 1, losses: 1, pending: 2, pnl: "+$0.45" },
   { name: "Stevie", color: "#E8192C", emoji: "😤", wins: 0, losses: 1, pending: 2, pnl: "-$60.00" },
   { name: "Will", color: "#3B82F6", emoji: "🧠", wins: 0, losses: 0, pending: 1, pnl: "$0.00" },
-];
-
-const clips = [
-  { id: 1, status: "PUBLISHED", ep: "EP. 47 — Masters Madness", date: "Apr 11", title: "Is Lamar Jackson Figured Out?", desc: "A Commanders vet says...", tag: "NFL", duration: "3:30", views: "19.3K", likes: "1.4K", url: "https://youtube.com" },
-  { id: 2, status: "PUBLISHED", ep: "EP. 47 — Masters Madness", date: "Apr 11", title: "Bijan Robinson 5th Year Option Breakdown", desc: "Why the Falcons made the right...", tag: "NFL", duration: "2:10", views: "6.7K", likes: "410", url: "https://youtube.com" },
-  { id: 3, status: "SCHEDULED", ep: "EP. 48 — NBA Playoffs", date: "Apr 18", title: "Who Stops the Celtics?", desc: "Breaking down every contender...", tag: "NBA", duration: "4:15", views: "—", likes: "—", url: "" },
-  { id: 4, status: "DRAFT", ep: "EP. 48 — NBA Playoffs", date: "Apr 18", title: "NFL Draft Big Board Reaction", desc: "Our takes on the top 10...", tag: "NFL", duration: "5:00", views: "—", likes: "—", url: "" },
 ];
 
 const bets = [
