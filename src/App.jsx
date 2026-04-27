@@ -4,23 +4,13 @@ const ODDS_API_KEY = process.env.REACT_APP_ODDS_API_KEY;
 
 const storyFilters = ["ALL", "BREAKING", "CULTURE", "TRADES", "SCORES", "VIRAL"];
 const clipFilters = ["ALL", "LIVE", "SCHEDULED", "DRAFTS"];
-const betFilters = ["ALL", "PENDING", "WON", "LOST", "JAY", "MARCUS", "DEON", "STEVIE", "WILL"];
+const betFilters = ["ALL", "PENDING", "WON", "LOST", "Joe", "STEVIE", "WILL"];
 
-const members = [
-  { name: "Jay", color: "#22C55E", emoji: "👑", wins: 2, losses: 0, pending: 2, pnl: "+$79.65" },
-  { name: "Marcus", color: "#F97316", emoji: "🔥", wins: 1, losses: 0, pending: 3, pnl: "+$14.29" },
-  { name: "Deon", color: "#A855F7", emoji: "🎯", wins: 1, losses: 1, pending: 2, pnl: "+$0.45" },
-  { name: "Stevie", color: "#E8192C", emoji: "😤", wins: 0, losses: 1, pending: 2, pnl: "-$60.00" },
-  { name: "Will", color: "#3B82F6", emoji: "🧠", wins: 0, losses: 0, pending: 1, pnl: "$0.00" },
-];
-
-const bets = [
-  { id: 1, bettor: "Jay", sport: "Soccer", type: "Over/Under", detail: "Over 3.5", stake: 55, toWin: 52.38, odds: "(-105)", status: "PENDING", note: '"Both teams leak goals, goalfest incoming"' },
-  { id: 2, bettor: "Marcus", sport: "NBA", type: "Moneyline", detail: "Cavaliers ML", stake: 40, toWin: 14.29, odds: "(-280)", status: "WON", note: '"Cavs at home, no question"' },
-  { id: 3, bettor: "Deon", sport: "Golf", type: "To Win", detail: "McIlroy Masters", stake: 25, toWin: 0.45, odds: "(+1.8)", status: "PENDING", note: '"Rory locked in this week"' },
-  { id: 4, bettor: "Stevie", sport: "NFL", type: "Spread", detail: "Eagles -3.5", stake: 50, toWin: 45.45, odds: "(-110)", status: "LOST", note: '"Eagles D is elite right now"' },
-  { id: 5, bettor: "Jay", sport: "NBA", type: "Spread", detail: "Heat +7.5", stake: 30, toWin: 27.27, odds: "(-110)", status: "WON", note: '"Heat never go down easy"' },
-  { id: 6, bettor: "Will", sport: "UFC", type: "Moneyline", detail: "Poirier ML", stake: 35, toWin: 28.0, odds: "(-125)", status: "PENDING", note: '"Dustin by decision, book it"' },
+const members = ["Joe", "Stevie", "Will"];
+  const members = [
+  { name: "Joe", color: "#22C55E", emoji: "👑", wins: 0, losses: 0, pending: 0, pnl: "$0.00" },
+  { name: "Stevie", color: "#E8192C", emoji: "😤", wins: 0, losses: 0, pending: 0, pnl: "$0.00" },
+  { name: "Will", color: "#3B82F6", emoji: "🧠", wins: 0, losses: 0, pending: 0, pnl: "$0.00" },
 ];
 
 const SPORT_CONFIGS = [
