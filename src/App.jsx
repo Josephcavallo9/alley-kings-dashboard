@@ -6,7 +6,6 @@ const storyFilters = ["ALL", "BREAKING", "CULTURE", "TRADES", "SCORES", "VIRAL"]
 const clipFilters = ["ALL", "LIVE", "SCHEDULED", "DRAFTS"];
 const betFilters = ["ALL", "PENDING", "WON", "LOST", "Joe", "STEVIE", "WILL"];
 
-const members = ["Joe", "Stevie", "Will"];
   const members = [
   { name: "Joe", color: "#22C55E", emoji: "👑", wins: 0, losses: 0, pending: 0, pnl: "$0.00" },
   { name: "Stevie", color: "#E8192C", emoji: "😤", wins: 0, losses: 0, pending: 0, pnl: "$0.00" },
