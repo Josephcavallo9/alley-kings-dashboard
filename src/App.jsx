@@ -4,7 +4,7 @@ const ODDS_API_KEY = process.env.REACT_APP_ODDS_API_KEY;
 
 const storyFilters = ["ALL", "BREAKING", "CULTURE", "TRADES", "SCORES", "VIRAL"];
 const clipFilters = ["ALL", "LIVE", "SCHEDULED", "DRAFTS"];
-const betFilters = ["ALL", "PENDING", "WON", "LOST", "Joe", "STEVIE", "WILL"];
+const betFilters = ["ALL", "PENDING", "WON", "LOST", "Joe", "Stevie", "Will"];
 
   const members = [
   { name: "Joe", color: "#22C55E", emoji: "👑", wins: 0, losses: 0, pending: 0, pnl: "$0.00" },
@@ -217,7 +217,7 @@ useEffect(() => {
   const filteredScores = activeSport === "ALL" ? scores : scores.filter(g => g.sportConfig.label === activeSport);
   const filteredArticles = storyFilter === "ALL" ? articles : articles.filter(a => categorizeArticle(a).type === storyFilter);
   const filteredClips = clipFilter === "ALL" ? dbClips : dbClips.filter(c => clipFilter === "DRAFTS" ? c.status === "DRAFT" : c.status === clipFilter);
-  const filteredBets = betFilter === "ALL" ? dbBets : ["PENDING", "WON", "LOST"].includes(betFilter) ? dbBets.filter(b => b.status === betFilter) : dbBets.filter(b => b.bettor.toUpperCase() === betFilter);
+  const filteredBets = betFilter === "ALL" ? dbBets : ["PENDING", "WON", "LOST"].includes(betFilter) ? dbBets.filter(b => b.status === betFilter) : dbBets.filter(b => b.bettor === betFilter);
 
   const newsTickerString = tickerHeadlines.join("     •     ");
   const oddsTickerString = oddsTicker.length > 0 ? oddsTicker.join("          |          ") : "Loading odds...";
