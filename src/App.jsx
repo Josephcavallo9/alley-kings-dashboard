@@ -223,7 +223,7 @@ useEffect(() => {
   const oddsTickerString = oddsTicker.length > 0 ? oddsTicker.join("          |          ") : "Loading odds...";
 
   return (
-    <div style={{ fontFamily: "'Barlow Condensed', 'Arial Narrow', sans-serif", background: "#0A0A0A", minHeight: "100vh", maxWidth: 480, margin: "0 auto" }}>
+    <div style={{ fontFamily: "'Barlow Condensed', 'Arial Narrow', sans-serif", background: "#0A0A0A", minHeight: "100vh", maxWidth: "100%", margin: "0 auto" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@400;500;600&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -242,7 +242,12 @@ useEffect(() => {
         .member-card { background: white; border-radius: 12px; padding: 12px; min-width: 120px; flex-shrink: 0; border: 2px solid; }
         .stat-card { background: white; border-radius: 12px; padding: 14px 10px; min-width: 100px; flex-shrink: 0; text-align: center; border-top: 3px solid; }
         .clip-card { background: white; border-radius: 12px; padding: 14px; }
-        .bet-card { background: white; border-radius: 12px; padding: 14px; margin-bottom: 12px; border-left: 4px solid; }
+        .bet-card {
+  background: #fff;
+  border-radius: 18px;
+  border-left: 5px solid #e8192c;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.04);
+}
         .news-ticker { overflow: hidden; background: #E8192C; padding: 7px 0; }
         .news-ticker-inner { display: inline-block; white-space: nowrap; animation: newsticker 90s linear infinite; }
         .odds-ticker { overflow: hidden; background: #141414; border-top: 1px solid #222; border-bottom: 1px solid #222; padding: 5px 0; }
@@ -251,9 +256,34 @@ useEffect(() => {
         @keyframes oddsticker { 0% { transform: translateX(100vw); } 100% { transform: translateX(-100%); } }
         .score-card { background: #111; border-radius: 12px; padding: 14px; flex-shrink: 0; min-width: 175px; }
         .upcoming-card { background: #111; border-radius: 12px; padding: 14px; flex-shrink: 0; min-width: 175px; }
-      `}</style>
+        @media (max-width: 600px) {
+  .bet-card {
+    grid-template-columns: 1fr !important;
+    gap: 14px;
+  }
 
-      <div style={{ background: "#0D0D0D", padding: "12px 16px 14px" }}>
+  .bet-card > div:nth-child(2) {
+    text-align: left !important;
+    border-left: none !important;
+    border-right: none !important;
+    border-top: 1px solid #eee;
+    border-bottom: 1px solid #eee;
+    padding: 12px 0 !important;
+  }
+
+  .bet-card > div:nth-child(3) {
+    text-align: left !important;
+  }
+}
+      `}</style>
+<div className="odds-ticker">
+        <div className="odds-ticker-inner">
+          <span style={{ color: "#666", fontSize: 10, fontWeight: 700, letterSpacing: 0.5, paddingRight: 40 }}>
+            {oddsTickerString} &nbsp;&nbsp;&nbsp; {oddsTickerString}
+          </span>
+        </div>
+      </div>
+      <div style={{ background: "#0D0D0D", padding: "12px 24px 14px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
           <div style={{ background: "white", borderRadius: 6, padding: "4px 10px" }}>
             <span style={{ fontWeight: 900, fontSize: 13 }}>ALLEY</span>
@@ -354,13 +384,7 @@ useEffect(() => {
         )}
       </div>
 
-      <div className="odds-ticker">
-        <div className="odds-ticker-inner">
-          <span style={{ color: "#666", fontSize: 10, fontWeight: 700, letterSpacing: 0.5, paddingRight: 40 }}>
-            {oddsTickerString} &nbsp;&nbsp;&nbsp; {oddsTickerString}
-          </span>
-        </div>
-      </div>
+      
 
       <div className="news-ticker">
         <div className="news-ticker-inner">
@@ -541,39 +565,178 @@ useEffect(() => {
                   <button key={f} className="filter-btn" onClick={() => setBetFilter(f)} style={{ background: betFilter === f ? "#0A0A0A" : "#F4F4F4", color: betFilter === f ? "white" : "#888" }}>{f}</button>
                 ))}
               </div>
-              {filteredBets.map(b => {
-                const s = statusStyle(b.status);
-                const member = members.find(m => m.name === b.bettor);
-                return (
-                  <div key={b.id} className="bet-card" style={{ borderLeftColor: member?.color || "#888" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
-                      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                        <span style={{ background: (member?.color || "#888") + "22", color: member?.color, fontSize: 11, fontWeight: 800, padding: "2px 8px", borderRadius: 6 }}>{b.bettor}</span>
-                        <span style={{ background: "#F4F4F4", fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 6, color: "#888" }}>{b.sport}</span>
-                      </div>
-                      <span style={{ background: s.bg, color: s.text, fontSize: 9, fontWeight: 800, padding: "3px 8px", borderRadius: 6 }}>
-                        {b.status === "PENDING" ? "⏳" : b.status === "WON" ? "✅" : "❌"} {b.status}
-                      </span>
-                    </div>
-                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                      <div>
-                        <div style={{ fontSize: 9, color: "#888" }}>{b.type}</div>
-                        <div style={{ fontSize: 13, fontWeight: 800 }}>{b.detail}</div>
-                        <div style={{ fontSize: 10, color: "#888" }}>{b.odds}</div>
-                      </div>
-                      <div style={{ textAlign: "center" }}>
-                        <div style={{ fontSize: 9, color: "#888" }}>STAKE</div>
-                        <div style={{ fontSize: 18, fontWeight: 900 }}>${b.stake}</div>
-                      </div>
-                      <div style={{ textAlign: "right" }}>
-                        <div style={{ fontSize: 9, color: "#888" }}>TO WIN</div>
-                        <div style={{ fontSize: 18, fontWeight: 900, color: "#3B82F6" }}>${parseFloat(b.to_win || b.toWin || 0).toFixed(2)}</div>
-                      </div>
-                    </div>
-                    <div style={{ fontSize: 11, color: "#888", fontStyle: "italic" }}>💬 {b.note}</div>
-                  </div>
-                );
-              })}
+             {filteredBets.map(b => {
+  const s = statusStyle(b.status);
+  const member = members.find(m => m.name === b.bettor);
+
+  return (
+    <div
+      key={b.id}
+      className="bet-card"
+      style={{
+        borderLeftColor: member?.color || "#E8192C",
+        display: "grid",
+        gridTemplateColumns: "1fr 90px 100px",
+        alignItems: "center",
+        gap: 14,
+        padding: "16px 18px",
+        marginBottom: 12,
+        minHeight: 105,
+      }}
+    >
+      {/* LEFT SIDE */}
+      <div style={{ minWidth: 0 }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            marginBottom: 10,
+            flexWrap: "wrap",
+          }}
+        >
+          <span
+            style={{
+              background: member?.color || "#888",
+              color: "#fff",
+              fontSize: 10,
+              fontWeight: 800,
+              borderRadius: 999,
+              padding: "4px 10px",
+            }}
+          >
+            {b.bettor}
+          </span>
+
+          <span
+            style={{
+              background: "#F4F4F4",
+              color: "#777",
+              fontSize: 10,
+              fontWeight: 800,
+              borderRadius: 999,
+              padding: "4px 10px",
+            }}
+          >
+            {b.sport || "NBA"}
+          </span>
+        </div>
+
+        <div style={{ fontSize: 10, color: "#888", marginBottom: 3 }}>
+          {b.type}
+        </div>
+
+        <div
+          style={{
+            fontSize: 15,
+            fontWeight: 900,
+            color: "#111",
+            lineHeight: 1.25,
+            maxWidth: "100%",
+          }}
+        >
+          {b.detail}
+        </div>
+
+        <div style={{ fontSize: 11, color: "#888", marginTop: 4 }}>
+          {b.odds}
+        </div>
+
+        {b.note && (
+          <div
+            style={{
+              fontSize: 11,
+              color: "#888",
+              fontStyle: "italic",
+              marginTop: 12,
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}
+          >
+            💬 {b.note}
+          </div>
+        )}
+      </div>
+
+      {/* STAKE */}
+      <div
+        style={{
+          textAlign: "center",
+          borderLeft: "1px solid #eee",
+          borderRight: "1px solid #eee",
+          padding: "0 10px",
+        }}
+      >
+        <div
+          style={{
+            fontSize: 9,
+            color: "#888",
+            fontWeight: 800,
+            letterSpacing: 1,
+            marginBottom: 4,
+          }}
+        >
+          STAKE
+        </div>
+
+        <div
+          style={{
+            fontSize: 22,
+            fontWeight: 900,
+            color: "#111",
+          }}
+        >
+          ${b.stake}
+        </div>
+      </div>
+
+      {/* STATUS + TO WIN */}
+      <div style={{ textAlign: "right" }}>
+        <div
+          style={{
+            display: "inline-block",
+            background: s.bg,
+            color: s.text,
+            fontSize: 9,
+            fontWeight: 900,
+            borderRadius: 999,
+            padding: "5px 9px",
+            marginBottom: 12,
+          }}
+        >
+          {b.status === "PENDING"
+            ? "⏳ PENDING"
+            : b.status === "WON"
+            ? "✅ WON"
+            : "❌ LOST"}
+        </div>
+
+        <div
+          style={{
+            fontSize: 9,
+            color: "#888",
+            fontWeight: 800,
+            letterSpacing: 1,
+            marginBottom: 4,
+          }}
+        >
+          TO WIN
+        </div>
+
+        <div
+          style={{
+            fontSize: 22,
+            fontWeight: 900,
+            color: "#3B82F6",
+          }}
+        >
+          ${b.toWin}
+        </div>
+      </div>
+    </div>
+  );
+})}
             </div>
           </div>
         )}
