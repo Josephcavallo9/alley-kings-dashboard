@@ -275,6 +275,154 @@ useEffect(() => {
     text-align: left !important;
   }
 }
+  .briefing-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 22px;
+  padding: 12px 16px 24px;
+  align-items: start;
+}
+
+.featured-story {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  background: #fff;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid #f0f0f0;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.06);
+}
+
+.featured-image {
+  height: 360px;
+  background: #111;
+  overflow: hidden;
+}
+
+.featured-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.featured-placeholder {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 72px;
+  background: linear-gradient(135deg, #111, #e8192c);
+}
+
+.featured-content {
+  padding: 22px;
+}
+
+.featured-title {
+  font-size: 34px;
+  font-weight: 900;
+  line-height: 1.05;
+  color: #111;
+  margin-bottom: 10px;
+}
+
+.featured-desc {
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #666;
+  margin-bottom: 14px;
+}
+
+.featured-date {
+  font-size: 11px;
+  color: #999;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.briefing-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sidebar-card {
+  background: #111;
+  color: #fff;
+  border-radius: 18px;
+  padding: 18px;
+  border: 1px solid #222;
+}
+
+.sidebar-title {
+  font-size: 20px;
+  font-weight: 900;
+  margin-bottom: 16px;
+}
+
+.trending-list {
+  max-height: 360px;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.trending-item {
+  display: grid;
+  grid-template-columns: 12px 1fr;
+  gap: 10px;
+  text-decoration: none;
+  color: inherit;
+  padding: 12px 0;
+  border-bottom: 1px solid #252525;
+}
+
+.trending-headline {
+  font-family: Arial, sans-serif;
+  font-size: 13px;
+  line-height: 1.35;
+  color: #ddd;
+}
+
+.trending-meta {
+  margin-top: 5px;
+  font-size: 10px;
+  color: #777;
+  font-weight: 700;
+}
+
+.social-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.social-row a {
+  text-align: center;
+  background: #e8192c;
+  color: #fff;
+  text-decoration: none;
+  border-radius: 10px;
+  padding: 10px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+@media (max-width: 900px) {
+  .briefing-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .featured-image {
+    height: 240px;
+  }
+
+  .featured-title {
+    font-size: 26px;
+  }
+}
       `}</style>
 <div className="odds-ticker">
         <div className="odds-ticker-inner">
@@ -452,29 +600,145 @@ useEffect(() => {
               ))}
             </div>
             {loading ? (
-              <div style={{ padding: 30, textAlign: "center", color: "#888", fontSize: 13 }}>Loading latest stories...</div>
-            ) : (
-              <div>
-                {filteredArticles.map((article, i) => {
-                  const cat = categorizeArticle(article);
-                  return (
-                    <a key={i} href={article.url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>
-                      <div className="story-row" style={{ borderLeftColor: cat.color }}>
-                        <div style={{ flex: 1 }}>
-                          <div style={{ display: "flex", gap: 6, alignItems: "center", marginBottom: 4 }}>
-                            <span style={{ background: cat.color + "22", color: cat.color, fontSize: 9, fontWeight: 800, padding: "2px 7px", borderRadius: 4 }}>{cat.emoji} {cat.type}</span>
-                            <span style={{ color: "#E8192C", fontSize: 10, fontWeight: 800 }}>{article.source?.name || "ESPN"}</span>
-                            <span style={{ color: "#bbb", fontSize: 9, marginLeft: "auto" }}>{new Date(article.publishedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
-                          </div>
-                          <div style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.3, color: "#111" }}>{article.title}</div>
-                        </div>
-                        <span style={{ color: "#ccc", fontSize: 16, marginTop: 2 }}>›</span>
-                      </div>
-                    </a>
-                  );
-                })}
+  <div style={{ padding: 30, textAlign: "center", color: "#888", fontSize: 13 }}>
+    Loading latest stories...
+  </div>
+) : (
+  <div className="briefing-layout">
+    {/* FEATURED STORY */}
+{(() => {
+  const featured = filteredArticles[0] || {
+    title: "Alley Kings Daily Briefing",
+    description:
+      "Your home for sports culture, picks, reactions, viral moments, and the biggest stories across the game.",
+    source_name: "Alley Kings Media",
+    publishedAt: new Date().toISOString(),
+    url: "#",
+    image_url: "",
+  };
+
+  const cat = filteredArticles[0]
+    ? categorizeArticle(featured)
+    : { color: "#E8192C", emoji: "👑", type: "FEATURED" };
+
+  return (
+    <a
+      href={featured.url}
+      target={featured.url === "#" ? "_self" : "_blank"}
+      rel="noopener noreferrer"
+      className="featured-story"
+    >
+      <div className="featured-image">
+        {featured.image_url ? (
+          <img src={featured.image_url} alt={featured.title} />
+        ) : (
+          <div className="featured-placeholder">
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontSize: 72, marginBottom: 10 }}>👑</div>
+              <div style={{ fontSize: 24, fontWeight: 900, color: "#fff" }}>
+                ALLEY KINGS
               </div>
-            )}
+              <div style={{ fontSize: 11, color: "#ddd", letterSpacing: 2 }}>
+                SPORTS CULTURE INTELLIGENCE
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="featured-content">
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            marginBottom: 10,
+          }}
+        >
+          <span
+            style={{
+              background: cat.color + "22",
+              color: cat.color,
+              fontSize: 10,
+              fontWeight: 900,
+              padding: "4px 8px",
+              borderRadius: 6,
+            }}
+          >
+            {cat.emoji} {cat.type}
+          </span>
+
+          <span style={{ color: "#888", fontSize: 10, fontWeight: 800 }}>
+            {featured.source_name || "Sports News"}
+          </span>
+        </div>
+
+        <div className="featured-title">{featured.title}</div>
+
+        <div className="featured-desc">
+          {featured.description ||
+            "Latest sports culture story from across the game."}
+        </div>
+
+        <div className="featured-date">
+          {new Date(featured.publishedAt).toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+          })}
+        </div>
+      </div>
+    </a>
+  );
+})()}
+
+    {/* RIGHT SIDEBAR */}
+    <div className="briefing-sidebar">
+      <div className="sidebar-card">
+        <div className="sidebar-title">🔥 Trending Stories</div>
+
+        <div className="trending-list">
+          {filteredArticles.slice(1, 8).map((article, i) => {
+            const cat = categorizeArticle(article);
+
+            return (
+              <a
+                key={i}
+                href={article.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="trending-item"
+              >
+                <span style={{ color: cat.color }}>●</span>
+                <div>
+                  <div className="trending-headline">{article.title}</div>
+                  <div className="trending-meta">
+                    {article.source_name || "Sports News"} ·{" "}
+                    {new Date(article.publishedAt).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                    })}
+                  </div>
+                </div>
+              </a>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="sidebar-card social-card">
+        <div className="sidebar-title">🎥 Follow Alley Kings</div>
+        <div className="social-row">
+          <a href="https://www.tiktok.com/" target="_blank" rel="noopener noreferrer">
+            TikTok
+          </a>
+          <a href="https://twitter.com/" target="_blank" rel="noopener noreferrer">
+            X / Twitter
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
           </div>
         )}
 
