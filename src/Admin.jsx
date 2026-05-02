@@ -3,7 +3,7 @@ import { supabase } from "./supabase";
 
 const ADMIN_PASSWORD = "alleykings2024";
 
-const MEMBERS = ["Jay", "Marcus", "Deon", "Stevie", "Will"];
+const MEMBERS = ["Joe", "Stevie", "Will"];
 const SPORTS = ["NBA", "NFL", "MLB", "NHL", "Soccer", "UFC", "Golf", "Other"];
 const BET_STATUSES = ["PENDING", "WON", "LOST"];
 const CLIP_STATUSES = ["PUBLISHED", "SCHEDULED", "DRAFT"];
@@ -17,9 +17,10 @@ export default function Admin() {
   const [clips, setClips] = useState([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
-
+const [editingBetId, setEditingBetId] = useState(null);
+const [editingClipId, setEditingClipId] = useState(null);
   const [newBet, setNewBet] = useState({
-    bettor: "Jay", sport: "NBA", type: "Moneyline", detail: "",
+    bettor: "Joe", sport: "NBA", type: "Moneyline", detail: "",
     stake: "", to_win: "", odds: "", status: "PENDING", note: ""
   });
 
@@ -45,25 +46,64 @@ export default function Admin() {
     setClips(data || []);
   };
 
-  const addBet = async () => {
-    if (!newBet.detail || !newBet.stake) { setMessage("Fill in bet detail and stake"); return; }
-    setLoading(true);
-    const { error } = await supabase.from("bets").insert([{
-      ...newBet,
-      stake: parseFloat(newBet.stake),
-      to_win: parseFloat(newBet.to_win) || 0,
-    }]);
-    if (!error) {
-      setMessage("Bet added!");
-      setNewBet({ bettor: "Jay", sport: "NBA", type: "Moneyline", detail: "", stake: "", to_win: "", odds: "", status: "PENDING", note: "" });
-      fetchBets();
-    } else {
-      setMessage("Error: " + error.message);
-    }
-    setLoading(false);
-    setTimeout(() => setMessage(""), 3000);
+  const saveBet = async () => {
+  if (!newBet.detail || !newBet.stake) {
+    setMessage("Fill in bet detail and stake");
+    return;
+  }
+
+  setLoading(true);
+
+  const betPayload = {
+    ...newBet,
+    stake: parseFloat(newBet.stake),
+    to_win: parseFloat(newBet.to_win) || 0,
   };
 
+  const { error } = editingBetId
+    ? await supabase.from("bets").update(betPayload).eq("id", editingBetId)
+    : await supabase.from("bets").insert([betPayload]);
+
+  if (!error) {
+    setMessage(editingBetId ? "Bet updated!" : "Bet added!");
+    setEditingBetId(null);
+    setNewBet({
+      bettor: "Joe",
+      sport: "NBA",
+      type: "Moneyline",
+      detail: "",
+      stake: "",
+      to_win: "",
+      odds: "",
+      status: "PENDING",
+      note: "",
+    });
+    fetchBets();
+  } else {
+    setMessage("Error: " + error.message);
+  }
+
+  setLoading(false);
+  setTimeout(() => setMessage(""), 3000);
+};
+const editClip = (clip) => {
+  setEditingClipId(clip.id);
+
+  setNewClip({
+    title: clip.title || "",
+    episode: clip.episode || "",
+    status: clip.status || "DRAFT",
+    tag: clip.tag || "NFL",
+    duration: clip.duration || "",
+    views: clip.views || "—",
+    likes: clip.likes || "—",
+    url: clip.url || "",
+    date: clip.date || "",
+    description: clip.description || "",
+  });
+
+  window.scrollTo({ top: 0, behavior: "smooth" });
+};
   const deleteBet = async (id) => {
     await supabase.from("bets").delete().eq("id", id);
     fetchBets();
@@ -74,21 +114,91 @@ export default function Admin() {
     fetchBets();
   };
 
-  const addClip = async () => {
-    if (!newClip.title) { setMessage("Fill in clip title"); return; }
-    setLoading(true);
-    const { error } = await supabase.from("clips").insert([newClip]);
-    if (!error) {
-      setMessage("Clip added!");
-      setNewClip({ title: "", episode: "", status: "DRAFT", tag: "NFL", duration: "", views: "—", likes: "—", url: "", date: "", description: "" });
-      fetchClips();
-    } else {
-      setMessage("Error: " + error.message);
-    }
-    setLoading(false);
-    setTimeout(() => setMessage(""), 3000);
-  };
+const editBet = (bet) => {
+  setEditingBetId(bet.id);
 
+  setNewBet({
+    bettor: bet.bettor || "Joe",
+    sport: bet.sport || "NBA",
+    type: bet.type || "Moneyline",
+    detail: bet.detail || "",
+    stake: bet.stake ?? "",
+    to_win: bet.to_win ?? "",
+    odds: bet.odds || "",
+    status: bet.status || "PENDING",
+    note: bet.note || "",
+  });
+
+  window.scrollTo({ top: 0, behavior: "smooth" });
+};
+
+const cancelBetEdit = () => {
+  setEditingBetId(null);
+
+  setNewBet({
+    bettor: "Joe",
+    sport: "NBA",
+    type: "Moneyline",
+    detail: "",
+    stake: "",
+    to_win: "",
+    odds: "",
+    status: "PENDING",
+    note: "",
+  });
+};
+  
+const saveClip = async () => {
+  if (!newClip.title) {
+    setMessage("Fill in clip title");
+    return;
+  }
+
+  setLoading(true);
+
+  const { error } = editingClipId
+    ? await supabase.from("clips").update(newClip).eq("id", editingClipId)
+    : await supabase.from("clips").insert([newClip]);
+
+  if (!error) {
+    setMessage(editingClipId ? "Clip updated!" : "Clip added!");
+    setEditingClipId(null);
+    setNewClip({
+      title: "",
+      episode: "",
+      status: "DRAFT",
+      tag: "NFL",
+      duration: "",
+      views: "—",
+      likes: "—",
+      url: "",
+      date: "",
+      description: "",
+    });
+    fetchClips();
+  } else {
+    setMessage("Error: " + error.message);
+  }
+
+  setLoading(false);
+  setTimeout(() => setMessage(""), 3000);
+};
+const cancelClipEdit = () => {
+  setEditingClipId(null);
+
+  setNewClip({
+    title: "",
+    episode: "",
+    status: "DRAFT",
+    tag: "NFL",
+    duration: "",
+    views: "—",
+    likes: "—",
+    url: "",
+    date: "",
+    description: "",
+  });
+};
   const deleteClip = async (id) => {
     await supabase.from("clips").delete().eq("id", id);
     fetchClips();
@@ -185,7 +295,14 @@ export default function Admin() {
               {BET_STATUSES.map(s => <option key={s}>{s}</option>)}
             </select>
             <input placeholder='Note (e.g. "Celtics locked in tonight")' value={newBet.note} onChange={e => setNewBet({ ...newBet, note: e.target.value })} style={inputStyle} />
-            <button onClick={addBet} disabled={loading} style={btnStyle()}>{loading ? "Adding..." : "Add Bet"}</button>
+  <button onClick={saveBet} disabled={loading} style={btnStyle()}>
+  {loading ? "Saving..." : editingBetId ? "Update Bet" : "Add Bet"}
+</button>
+{editingBetId && (
+  <button onClick={cancelBetEdit} style={btnStyle("#555")}>
+    Cancel Edit
+  </button>
+)}
           </div>
 
           <div style={{ fontSize: 14, fontWeight: 900, marginBottom: 10, color: "#333" }}>ALL BETS ({bets.length})</div>
@@ -203,7 +320,37 @@ export default function Admin() {
                     {s}
                   </button>
                 ))}
-                <button onClick={() => deleteBet(b.id)} style={{ padding: "5px 10px", fontSize: 10, fontWeight: 700, borderRadius: 6, border: "none", cursor: "pointer", background: "#FEE2E2", color: "#E8192C" }}>🗑️</button>
+                <button
+  onClick={() => editBet(b)}
+  style={{
+    padding: "5px 10px",
+    fontSize: 10,
+    fontWeight: 700,
+    borderRadius: 6,
+    border: "none",
+    cursor: "pointer",
+    background: "#DBEAFE",
+    color: "#2563EB",
+  }}
+>
+  ✏️
+</button>
+
+<button
+  onClick={() => deleteBet(b.id)}
+  style={{
+    padding: "5px 10px",
+    fontSize: 10,
+    fontWeight: 700,
+    borderRadius: 6,
+    border: "none",
+    cursor: "pointer",
+    background: "#FEE2E2",
+    color: "#E8192C",
+  }}
+>
+  🗑️
+</button>
               </div>
             </div>
           ))}
@@ -229,7 +376,14 @@ export default function Admin() {
             <select value={newClip.status} onChange={e => setNewClip({ ...newClip, status: e.target.value })} style={selectStyle}>
               {CLIP_STATUSES.map(s => <option key={s}>{s}</option>)}
             </select>
-            <button onClick={addClip} disabled={loading} style={btnStyle()}>{loading ? "Adding..." : "Add Clip"}</button>
+            <button onClick={saveClip} disabled={loading} style={btnStyle()}>
+  {loading ? "Saving..." : editingClipId ? "Update Clip" : "Add Clip"}
+</button>
+{editingClipId && (
+  <button onClick={cancelClipEdit} style={btnStyle("#555")}>
+    Cancel Edit
+  </button>
+)}
           </div>
 
           <div style={{ fontSize: 14, fontWeight: 900, marginBottom: 10, color: "#333" }}>ALL CLIPS ({clips.length})</div>
@@ -247,7 +401,37 @@ export default function Admin() {
                     {s}
                   </button>
                 ))}
-                <button onClick={() => deleteClip(c.id)} style={{ padding: "5px 10px", fontSize: 10, fontWeight: 700, borderRadius: 6, border: "none", cursor: "pointer", background: "#FEE2E2", color: "#E8192C" }}>🗑️</button>
+                <button
+  onClick={() => editClip(c)}
+  style={{
+    padding: "5px 10px",
+    fontSize: 10,
+    fontWeight: 700,
+    borderRadius: 6,
+    border: "none",
+    cursor: "pointer",
+    background: "#DBEAFE",
+    color: "#2563EB",
+  }}
+>
+  ✏️
+</button>
+
+<button
+  onClick={() => deleteClip(c.id)}
+  style={{
+    padding: "5px 10px",
+    fontSize: 10,
+    fontWeight: 700,
+    borderRadius: 6,
+    border: "none",
+    cursor: "pointer",
+    background: "#FEE2E2",
+    color: "#E8192C",
+  }}
+>
+  🗑️
+</button>
               </div>
             </div>
           ))}
