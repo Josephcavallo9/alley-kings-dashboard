@@ -1,18 +1,17 @@
 const fetchESPNData = async () => {
   try {
-    const [scoresRes, injuriesRes] = await Promise.all([
+    const [scoresRes, teamsRes] = await Promise.all([
       fetch("https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard"),
-      fetch("https://sports.core.api.espn.com/v2/sports/basketball/leagues/nba/injuries?limit=300"),
+      fetch("https://site.api.espn.com/apis/site/v2/sports/basketball/nba/teams"),
     ]);
 
-    const [scoresData, injuriesData] = await Promise.all([
+    const [scoresData, teamsData] = await Promise.all([
       scoresRes.json(),
-      injuriesRes.json(),
+      teamsRes.json(),
     ]);
 
     let context = "\n\n=== LIVE NBA DATA (Updated Now) ===\n";
 
-    // Today's games
     const games = scoresData?.events || [];
     if (games.length > 0) {
       context += "\nTODAY'S NBA GAMES:\n";
@@ -21,64 +20,64 @@ const fetchESPNData = async () => {
         const home = comp?.competitors?.find(t => t.homeAway === "home");
         const away = comp?.competitors?.find(t => t.homeAway === "away");
         const status = game.status?.type?.description || "Scheduled";
+        const homeName = home?.team?.displayName || "TBD";
+        const awayName = away?.team?.displayName || "TBD";
         const homeScore = home?.score || "";
         const awayScore = away?.score || "";
-        const homeName = home?.team?.displayName || home?.team?.name || "TBD";
-        const awayName = away?.team?.displayName || away?.team?.name || "TBD";
         context += `${awayName} ${awayScore} @ ${homeName} ${homeScore} — ${status}\n`;
       });
     } else {
       context += "\nNo NBA games today.\n";
     }
 
-    // Rosters for today's teams
-    if (games.length > 0) {
-      context += "\nROSTERS FOR TODAY'S TEAMS:\n";
-      for (const game of games.slice(0, 6)) {
-        const competitors = game.competitions?.[0]?.competitors || [];
-        for (const team of competitors) {
-          const teamId = team.team?.id;
-          const teamName = team.team?.displayName || team.team?.name;
-          if (!teamId) continue;
-          try {
-            const rosterRes = await fetch(
-              `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/teams/${teamId}/roster`
-            );
-            const rosterData = await rosterRes.json();
-            const players = rosterData?.athletes?.flatMap(g => g.items || []) || [];
-            const playerNames = players.map(p => p.displayName || p.fullName).filter(Boolean).join(", ");
-            if (playerNames) context += `${teamName}: ${playerNames}\n`;
-          } catch (e) {}
-        }
-      }
-    }
-
-    // Injuries - use team-specific endpoints
-    context += "\nINJURY REPORT:\n";
-    const teamsRes = await fetch("https://site.api.espn.com/apis/site/v2/sports/basketball/nba/teams");
-    const teamsData = await teamsRes.json();
     const teams = teamsData?.sports?.[0]?.leagues?.[0]?.teams || [];
 
-    for (const teamObj of teams.slice(0, 10)) {
+    context += "\nCURRENT NBA ROSTERS:\n";
+    const rosterPromises = teams.slice(0, 30).map(async (teamObj) => {
       const teamId = teamObj?.team?.id;
       const teamName = teamObj?.team?.displayName;
-      if (!teamId) continue;
+      if (!teamId) return "";
+      try {
+        const rosterRes = await fetch(
+          `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/teams/${teamId}/roster`
+        );
+        const rosterData = await rosterRes.json();
+        const players = rosterData?.athletes?.flatMap(g => g.items || []) || [];
+        const playerNames = players.map(p => p.displayName).filter(Boolean).join(", ");
+        return playerNames ? `${teamName}: ${playerNames}\n` : "";
+      } catch (e) {
+        return "";
+      }
+    });
+
+    const rosterResults = await Promise.all(rosterPromises);
+    context += rosterResults.join("");
+
+    context += "\nINJURY REPORT:\n";
+    const injuryPromises = teams.slice(0, 30).map(async (teamObj) => {
+      const teamId = teamObj?.team?.id;
+      const teamName = teamObj?.team?.displayName;
+      if (!teamId) return "";
       try {
         const injRes = await fetch(
           `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/teams/${teamId}/injuries`
         );
         const injData = await injRes.json();
         const injured = injData?.injuries || [];
-        if (injured.length > 0) {
-          injured.forEach(p => {
-            const name = p?.athlete?.displayName;
-            const status = p?.status;
-            const detail = p?.details?.type || "";
-            if (name) context += `${teamName}: ${name} — ${status} ${detail}\n`;
-          });
-        }
-      } catch (e) {}
-    }
+        if (injured.length === 0) return "";
+        return injured.map(p => {
+          const name = p?.athlete?.displayName;
+          const status = p?.status;
+          const detail = p?.details?.type || "";
+          return name ? `${teamName}: ${name} — ${status} ${detail}\n` : "";
+        }).join("");
+      } catch (e) {
+        return "";
+      }
+    });
+
+    const injuryResults = await Promise.all(injuryPromises);
+    context += injuryResults.join("");
 
     return context;
   } catch (err) {
