@@ -136,10 +136,7 @@ export default function AlleyKingsDashboard() {
   const [tickerHeadlines, setTickerHeadlines] = useState(["Loading latest sports news..."]);
   const [loading, setLoading] = useState(true);
   const [oddsLoading, setOddsLoading] = useState(true);
-  const [showBetForm, setShowBetForm] = useState(false);
-const [showClipForm, setShowClipForm] = useState(false);
-const [newBet, setNewBet] = useState({ bettor: "Joe", sport: "NBA", type: "Moneyline", detail: "", stake: "", to_win: "", odds: "", note: "", status: "PENDING" });
-const [newClip, setNewClip] = useState({ title: "", episode: "", status: "DRAFT", tag: "", duration: "", url: "", date: "", description: "" });
+
 useEffect(() => {
     const fetchDbData = async () => {
       const { data: betsData } = await supabase.from("bets").select("*").order("created_at", { ascending: false });
