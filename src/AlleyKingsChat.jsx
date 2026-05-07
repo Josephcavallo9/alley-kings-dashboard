@@ -87,13 +87,10 @@ export default function AlleyKingsChat({ liveOdds = [], liveScores = [] }) {
         content: m.content,
       }));
 
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
+      const res = await fetch("/.netlify/functions/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-api-key": process.env.REACT_APP_ANTHROPIC_API_KEY,
-          "anthropic-version": "2023-06-01",
-          "anthropic-dangerous-direct-browser-calls": "true",
         },
         body: JSON.stringify({
           model: "claude-sonnet-4-20250514",
