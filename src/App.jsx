@@ -1,3 +1,4 @@
+import AlleyKingsChat from './AlleyKingsChat';
 import { useState, useEffect } from "react";
 import { supabase } from './supabase';
 const ODDS_API_KEY = process.env.REACT_APP_ODDS_API_KEY;
@@ -1009,6 +1010,7 @@ useEffect(() => {
           </div>
         )}
       </div>
+    <AlleyKingsChat liveOdds={games} liveScores={scores} />
     </div>
   );
 }
