@@ -33,22 +33,23 @@ const fetchESPNData = async () => {
     const teams = teamsData?.sports?.[0]?.leagues?.[0]?.teams || [];
 
     context += "\nCURRENT NBA ROSTERS:\n";
-    const rosterPromises = teams.slice(0, 30).map(async (teamObj) => {
-      const teamId = teamObj?.team?.id;
-      const teamName = teamObj?.team?.displayName;
-      if (!teamId) return "";
-      try {
-        const rosterRes = await fetch(
-          `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/teams/${teamId}/roster`
-        );
-        const rosterData = await rosterRes.json();
-        const players = rosterData?.athletes?.flatMap(g => g.items || []) || [];
-        const playerNames = players.map(p => p.displayName).filter(Boolean).join(", ");
-        return playerNames ? `${teamName}: ${playerNames}\n` : "";
-      } catch (e) {
-        return "";
-      }
-    });
+const rosterPromises = teams.slice(0, 30).map(async (teamObj) => {
+  const teamAbbrev = teamObj?.team?.abbreviation;
+  const teamName = teamObj?.team?.displayName;
+  if (!teamAbbrev) return "";
+  try {
+    const rosterRes = await fetch(
+      `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/teams/${teamAbbrev}/roster`
+    );
+    const rosterData = await rosterRes.json();
+    const groups = rosterData?.athletes || [];
+    const players = groups.flatMap(g => g.items || []);
+    const playerNames = players.map(p => p.displayName).filter(Boolean).join(", ");
+    return playerNames ? `${teamName}: ${playerNames}\n` : "";
+  } catch (e) {
+    return "";
+  }
+});
 
     const rosterResults = await Promise.all(rosterPromises);
     context += rosterResults.join("");
