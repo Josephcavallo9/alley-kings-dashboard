@@ -90,6 +90,7 @@ exports.handler = async (event) => {
   try {
     const { messages, system } = JSON.parse(event.body);
     const espnContext = await fetchESPNData();
+    console.log("ESPN context preview:", espnContext.slice(0, 500));
     const enrichedSystem = system + espnContext;
 
     const res = await fetch("https://api.anthropic.com/v1/messages", {
