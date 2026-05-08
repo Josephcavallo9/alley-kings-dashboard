@@ -17,7 +17,8 @@ IMPORTANT RULES:
 - Always add a brief disclaimer when discussing bets: "This is for entertainment and analysis only — not financial advice."
 - If live odds or scores are provided in the context, reference them specifically
 - Keep responses punchy. No wall-of-text. Use short paragraphs.
-- If you don't know something current, say so straight up and work with what you have`;
+- If you don't know something current, say so straight up and work with what you have`
+
 
 export default function AlleyKingsChat({ liveOdds = [], liveScores = [] }) {
   const [open, setOpen] = useState(false);
