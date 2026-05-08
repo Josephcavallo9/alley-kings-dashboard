@@ -34,22 +34,24 @@ const NBA_TEAMS = [
 const fetchESPNData = async () => {
   try {
     const today = new Date().toISOString().split("T")[0].replace(/-/g, "");
-const tomorrow = new Date(Date.now() + 86400000).toISOString().split("T")[0].replace(/-/g, "");
-const [scoresRes, tomorrowRes] = await Promise.all([
-  fetch(`https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=${today}`),
-  fetch(`https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=${tomorrow}`),
-]);
-const [scoresData, tomorrowData] = await Promise.all([
-  scoresRes.json(),
-  tomorrowRes.json(),
-]);
-const games = [...(scoresData?.events || []), ...(tomorrowData?.events || [])];
-    const scoresData = await scoresRes.json();
+    const tomorrow = new Date(Date.now() + 86400000).toISOString().split("T")[0].replace(/-/g, "");
+
+    const [scoresRes, tomorrowRes] = await Promise.all([
+      fetch(`https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=${today}`),
+      fetch(`https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=${tomorrow}`),
+    ]);
+
+    const [scoresData, tomorrowData] = await Promise.all([
+      scoresRes.json(),
+      tomorrowRes.json(),
+    ]);
+
+    const games = [...(scoresData?.events || []), ...(tomorrowData?.events || [])];
 
     let context = "\n\n=== LIVE NBA DATA (Updated Now) ===\n";
 
     if (games.length > 0) {
-      context += "\nTODAY'S NBA GAMES:\n";
+      context += "\nTODAY AND TOMORROW'S NBA GAMES:\n";
       games.forEach(game => {
         const comp = game.competitions?.[0];
         const home = comp?.competitors?.find(t => t.homeAway === "home");
@@ -59,10 +61,11 @@ const games = [...(scoresData?.events || []), ...(tomorrowData?.events || [])];
         const awayName = away?.team?.displayName || "TBD";
         const homeScore = home?.score || "";
         const awayScore = away?.score || "";
-        context += `${awayName} ${awayScore} @ ${homeName} ${homeScore} — ${status}\n`;
+        const gameDate = new Date(game.date).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+        context += `${gameDate}: ${awayName} ${awayScore} @ ${homeName} ${homeScore} — ${status}\n`;
       });
     } else {
-      context += "\nNo NBA games today.\n";
+      context += "\nNo NBA games found.\n";
     }
 
     const [rosterResults, injuryResults] = await Promise.all([
