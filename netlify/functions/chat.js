@@ -68,34 +68,22 @@ const fetchESPNData = async () => {
       context += "\nNo NBA games found.\n";
     }
 
-    const [rosterResults, injuryResults] = await Promise.all([
-      Promise.all(NBA_TEAMS.map(async ({ id, name }) => {
-        try {
-          const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/basketball/nba/teams/${id}/roster`);
-          const data = await res.json();
-          const players = data?.athletes || [];
-          const names = players.map(p => p.displayName).filter(Boolean).join(", ");
-          return names ? `${name}: ${names}\n` : "";
-        } catch { return ""; }
-      })),
-      Promise.all(NBA_TEAMS.map(async ({ id, name }) => {
-        try {
-          const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/basketball/nba/teams/${id}/injuries`);
-          const data = await res.json();
-          const injured = data?.injuries || [];
-          if (!injured.length) return "";
-          return injured.map(p => {
-            const pname = p?.athlete?.displayName;
-            const status = p?.status;
-            const detail = p?.details?.type || "";
-            return pname ? `${name}: ${pname} — ${status} ${detail}\n` : "";
-          }).join("");
-        } catch { return ""; }
-      }))
-    ]);
+    const rosterAndInjuryResults = await Promise.all(NBA_TEAMS.map(async ({ id, name }) => {
+  try {
+    const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/basketball/nba/teams/${id}/roster`);
+    const data = await res.json();
+    const players = data?.athletes || [];
+    const names = players.map(p => p.displayName).filter(Boolean).join(", ");
+    const injured = players
+      .filter(p => p.injuries && p.injuries.length > 0)
+      .map(p => `${name}: ${p.displayName} — ${p.injuries[0].status}`)
+      .join("\n");
+    return { roster: names ? `${name}: ${names}\n` : "", injuries: injured ? injured + "\n" : "" };
+  } catch { return { roster: "", injuries: "" }; }
+}));
 
-    context += "\nCURRENT NBA ROSTERS:\n" + rosterResults.join("");
-    context += "\nINJURY REPORT:\n" + injuryResults.join("");
+context += "\nCURRENT NBA ROSTERS:\n" + rosterAndInjuryResults.map(r => r.roster).join("");
+context += "\nINJURY REPORT:\n" + rosterAndInjuryResults.map(r => r.injuries).join("");
 
     return context;
   } catch (err) {
