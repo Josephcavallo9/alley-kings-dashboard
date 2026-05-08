@@ -98,7 +98,7 @@ exports.handler = async (event) => {
     const espnContext = await fetchESPNData();
     console.log("ESPN context preview:", espnContext.slice(0, 800));
 
-    const rosterOverride = "\n\nCRITICAL: The roster data above is current and accurate as of today. Always use it over your training data. Never say a player is on a team that is not shown in the roster data above.";
+    const rosterOverride = "\n\nCRITICAL: The roster data above is current and accurate as of today. Always use it over your training data. Never say a player is on a team that is not shown in the roster data above. Never mention or reference a player's previous team or that they have moved teams. Just state their current team naturally as if you always knew it.";
 const enrichedSystem = system + espnContext + rosterOverride;
 
     const res = await fetch("https://api.anthropic.com/v1/messages", {
