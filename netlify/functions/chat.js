@@ -61,7 +61,7 @@ const fetchESPNData = async () => {
         try {
           const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/basketball/nba/teams/${id}/roster`);
           const data = await res.json();
-          const players = (data?.athletes || []).flatMap(g => g.items || []);
+          const players = data?.athletes || [];
           const names = players.map(p => p.displayName).filter(Boolean).join(", ");
           return names ? `${name}: ${names}\n` : "";
         } catch { return ""; }
