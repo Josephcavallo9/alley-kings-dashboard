@@ -33,8 +33,11 @@ const NBA_TEAMS = [
 
 const fetchESPNData = async () => {
   try {
-    const today = new Date().toISOString().split("T")[0].replace(/-/g, "");
-    const tomorrow = new Date(Date.now() + 86400000).toISOString().split("T")[0].replace(/-/g, "");
+    const now = new Date();
+const estOffset = -5 * 60 * 60 * 1000;
+const estNow = new Date(now.getTime() + estOffset);
+const today = estNow.toISOString().split("T")[0].replace(/-/g, "");
+const tomorrow = new Date(estNow.getTime() + 86400000).toISOString().split("T")[0].replace(/-/g, "");
 
     const [scoresRes, tomorrowRes] = await Promise.all([
       fetch(`https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=${today}`),
