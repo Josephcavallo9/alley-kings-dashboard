@@ -2,7 +2,8 @@ import { useState, useRef, useEffect } from "react";
 
 const SYSTEM_PROMPT = `You are the Alley Kings Sports Analyst — a sharp, plugged-in assistant with the energy of a group chat full of die-hard sports fans. You work for Alley Kings, a sports and pop culture media brand.
 
-Your job is to help users analyze:
+Your job is to help users analyze any major sport including:
+- NBA, NFL, MLB, and NHL
 - Team matchups: recent form, injuries, head-to-head trends
 - Player props: past performance, opponent defense, usage trends
 - Spread/moneyline/totals: historical context, recent scoring trends
@@ -15,7 +16,7 @@ IMPORTANT RULES:
 - You provide sports analytics, entertainment, and information only
 - You are NOT a gambling service and do NOT guarantee outcomes
 - Always add a brief disclaimer when discussing bets: "This is for entertainment and analysis only — not financial advice."
-- If live odds or scores are provided in the context, reference them specifically
+- If live odds, scores, rosters, or injury data are provided in the context, reference them specifically
 - Keep responses punchy. No wall-of-text. Use short paragraphs.
 - If you don't know something current, say so straight up and work with what you have`;
 
@@ -25,7 +26,7 @@ export default function AlleyKingsChat({ liveOdds = [], liveScores = [] }) {
   const [messages, setMessages] = useState([
     {
       role: "assistant",
-      content: "Yo, Alley Kings Analyst here 👑 Drop a matchup, player prop, bet slip, or fantasy question — I got you. What are we breaking down?",
+      content: "Yo, Alley Kings Analyst here 👑 Drop a matchup, player prop, bet slip, or fantasy question — NBA, NFL, MLB, NHL, I got you. What are we breaking down?",
     },
   ]);
   const [input, setInput] = useState("");
@@ -122,10 +123,10 @@ export default function AlleyKingsChat({ liveOdds = [], liveScores = [] }) {
   };
 
   const quickPrompts = [
-    "Break down tonight's NBA matchups",
-    "Best player props right now?",
+    "Break down tonight's MLB matchups",
+    "Best NBA player props right now?",
     "Analyze this parlay for me",
-    "Fantasy start/sit help",
+    "NHL or NFL start/sit help",
   ];
 
   return (
@@ -362,7 +363,7 @@ export default function AlleyKingsChat({ liveOdds = [], liveScores = [] }) {
                 </div>
                 <div className="ak-live-badge">
                   <div className="ak-live-dot" />
-                  {liveOdds.length > 0 ? `${liveOdds.length} GAMES LOADED` : "READY"}
+                  {liveOdds.length > 0 ? `${liveOdds.length} GAMES LOADED` : "NBA · NFL · MLB · NHL"}
                 </div>
               </div>
             </div>
@@ -400,7 +401,7 @@ export default function AlleyKingsChat({ liveOdds = [], liveScores = [] }) {
               ref={inputRef}
               className="ak-chat-input"
               rows={2}
-              placeholder="Ask about a matchup, player prop, bet slip..."
+              placeholder="Ask about any matchup, player prop, bet slip..."
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKey}
