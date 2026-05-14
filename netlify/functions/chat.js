@@ -159,13 +159,23 @@ const fetchScoreboard = async (sport, league) => {
   }
 };
 
+const extractPlayers = (data) => {
+  const athletes = data?.athletes || [];
+  // NFL (and some other sports) return athletes grouped: [{position: "Offense", items: [...]}, ...]
+  // NBA returns a flat array of player objects directly
+  if (athletes.length > 0 && athletes[0].items) {
+    return athletes.flatMap(group => group.items || []);
+  }
+  return athletes;
+};
+
 const fetchRosters = async (sport, league, teams) => {
   return Promise.all(
     teams.map(async ({ id, name }) => {
       try {
         const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/${sport}/${league}/teams/${id}/roster`);
         const data = await res.json();
-        const players = data?.athletes?.flatMap(g => g.items || g) || data?.athletes || [];
+        const players = extractPlayers(data);
         const names = players.map(p => p.displayName || p.fullName).filter(Boolean).join(", ");
         const injured = players
           .filter(p => p.injuries && p.injuries.length > 0)
