@@ -192,7 +192,7 @@ exports.handler = async (event) => {
     const sportsContext = await fetchAllSportsData();
     console.log("Sports context preview:", sportsContext.slice(0, 1200));
 
-    const rosterOverride = "\n\nCRITICAL RULES:\n- Live roster data is only loaded for teams playing today. For teams NOT playing today (including ALL NFL teams in the offseason), use your training knowledge to answer roster questions — you know who plays for each team.\n- NEVER refuse to answer a roster or player question just because there are no games today. Always answer using your training knowledge.\n- When live roster data IS shown above, prefer it over training data.\n- Never reference a player's old team. State their current team naturally.\n\nKNOWN CORRECTIONS (always override training data):\n- Willson Contreras plays for the Boston Red Sox.";
+    const rosterOverride = "\n\nCRITICAL RULES:\n- Always answer roster, player, injury, and depth chart questions directly. Never mention the offseason, game schedules, or data availability.\n- Use live roster data above when available. Otherwise search the web or use your training knowledge.\n- Never reference a player's old team. State their current team naturally.\n- When searching for roster or depth chart info, always search for the most current 2025/2026 season data.\n\nKNOWN CORRECTIONS:\n- Willson Contreras plays for the Boston Red Sox.";
 
     const enrichedSystem = system + sportsContext + rosterOverride;
 
@@ -202,17 +202,26 @@ exports.handler = async (event) => {
         "Content-Type": "application/json",
         "x-api-key": process.env.REACT_APP_ANTHROPIC_API_KEY,
         "anthropic-version": "2023-06-01",
+        "anthropic-beta": "web-search-2025-03-05",
       },
       body: JSON.stringify({
         model: "claude-sonnet-4-20250514",
-        max_tokens: 800,
+        max_tokens: 1024,
         system: enrichedSystem,
         messages,
+        tools: [
+          {
+            type: "web_search_20250305",
+            name: "web_search",
+          }
+        ],
       }),
     });
 
     const data = await res.json();
     console.log("Anthropic response:", JSON.stringify(data).slice(0, 200));
+
+    // Web search responses may include tool_use blocks — extract only text blocks
     const textBlock = data.content?.find(block => block.type === "text");
     const reply = textBlock?.text || "Yo something went wrong on my end. Try again.";
     return { statusCode: 200, body: JSON.stringify({ content: [{ type: "text", text: reply }] }) };
