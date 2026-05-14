@@ -261,7 +261,7 @@ exports.handler = async (event) => {
     const sportsContext = await fetchAllSportsData();
     console.log("Sports context preview:", sportsContext.slice(0, 800));
 
-    const rosterOverride = "\n\nCRITICAL: The roster data above is current and accurate as of today. Always use it over your training data. Never say a player is on a team that is not shown in the roster data above. Never mention or reference a player's previous team or that they have moved teams. Just state their current team naturally as if you always knew it.\n\nKNOWN ROSTER CORRECTIONS (override any conflicting data):\n- Willson Contreras is on the Boston Red Sox, NOT the St. Louis Cardinals or Houston Astros.";
+    const rosterOverride = "\n\nCRITICAL ROSTER RULES:\n- Roster data and game schedule data are completely separate. The absence of games today does NOT mean roster data is unavailable.\n- If roster data is provided above for a team, use it to answer questions about that team's players, depth chart, or personnel — regardless of whether that sport has games today.\n- Never tell the user you don't have roster data just because there are no games scheduled. Rosters are always available.\n- Always use the roster data above over your training data. Never say a player is on a team not listed in the roster data.\n- Never reference a player's previous team. State their current team naturally.\n\nKNOWN ROSTER CORRECTIONS (override any conflicting data):\n- Willson Contreras is on the Boston Red Sox, NOT the St. Louis Cardinals or Houston Astros.";
     const enrichedSystem = system + sportsContext + rosterOverride;
 
     const res = await fetch("https://api.anthropic.com/v1/messages", {
