@@ -1,140 +1,76 @@
 const NBA_TEAMS = [
-  { id: "1", name: "Atlanta Hawks" },
-  { id: "2", name: "Boston Celtics" },
-  { id: "17", name: "Brooklyn Nets" },
-  { id: "30", name: "Charlotte Hornets" },
-  { id: "4", name: "Chicago Bulls" },
-  { id: "5", name: "Cleveland Cavaliers" },
-  { id: "6", name: "Dallas Mavericks" },
-  { id: "7", name: "Denver Nuggets" },
-  { id: "8", name: "Detroit Pistons" },
-  { id: "9", name: "Golden State Warriors" },
-  { id: "10", name: "Houston Rockets" },
-  { id: "11", name: "Indiana Pacers" },
-  { id: "12", name: "LA Clippers" },
-  { id: "13", name: "Los Angeles Lakers" },
-  { id: "29", name: "Memphis Grizzlies" },
-  { id: "14", name: "Miami Heat" },
-  { id: "15", name: "Milwaukee Bucks" },
-  { id: "16", name: "Minnesota Timberwolves" },
-  { id: "3", name: "New Orleans Pelicans" },
-  { id: "18", name: "New York Knicks" },
-  { id: "25", name: "Oklahoma City Thunder" },
-  { id: "19", name: "Orlando Magic" },
-  { id: "20", name: "Philadelphia 76ers" },
-  { id: "21", name: "Phoenix Suns" },
-  { id: "22", name: "Portland Trail Blazers" },
-  { id: "23", name: "Sacramento Kings" },
-  { id: "24", name: "San Antonio Spurs" },
-  { id: "28", name: "Toronto Raptors" },
-  { id: "26", name: "Utah Jazz" },
-  { id: "27", name: "Washington Wizards" },
+  { id: "1", name: "Atlanta Hawks" }, { id: "2", name: "Boston Celtics" },
+  { id: "17", name: "Brooklyn Nets" }, { id: "30", name: "Charlotte Hornets" },
+  { id: "4", name: "Chicago Bulls" }, { id: "5", name: "Cleveland Cavaliers" },
+  { id: "6", name: "Dallas Mavericks" }, { id: "7", name: "Denver Nuggets" },
+  { id: "8", name: "Detroit Pistons" }, { id: "9", name: "Golden State Warriors" },
+  { id: "10", name: "Houston Rockets" }, { id: "11", name: "Indiana Pacers" },
+  { id: "12", name: "LA Clippers" }, { id: "13", name: "Los Angeles Lakers" },
+  { id: "29", name: "Memphis Grizzlies" }, { id: "14", name: "Miami Heat" },
+  { id: "15", name: "Milwaukee Bucks" }, { id: "16", name: "Minnesota Timberwolves" },
+  { id: "3", name: "New Orleans Pelicans" }, { id: "18", name: "New York Knicks" },
+  { id: "25", name: "Oklahoma City Thunder" }, { id: "19", name: "Orlando Magic" },
+  { id: "20", name: "Philadelphia 76ers" }, { id: "21", name: "Phoenix Suns" },
+  { id: "22", name: "Portland Trail Blazers" }, { id: "23", name: "Sacramento Kings" },
+  { id: "24", name: "San Antonio Spurs" }, { id: "28", name: "Toronto Raptors" },
+  { id: "26", name: "Utah Jazz" }, { id: "27", name: "Washington Wizards" },
 ];
 
 const NFL_TEAMS = [
-  { id: "22", name: "Arizona Cardinals" },
-  { id: "1", name: "Atlanta Falcons" },
-  { id: "33", name: "Baltimore Ravens" },
-  { id: "2", name: "Buffalo Bills" },
-  { id: "29", name: "Carolina Panthers" },
-  { id: "3", name: "Chicago Bears" },
-  { id: "4", name: "Cincinnati Bengals" },
-  { id: "5", name: "Cleveland Browns" },
-  { id: "6", name: "Dallas Cowboys" },
-  { id: "7", name: "Denver Broncos" },
-  { id: "8", name: "Detroit Lions" },
-  { id: "9", name: "Green Bay Packers" },
-  { id: "34", name: "Houston Texans" },
-  { id: "11", name: "Indianapolis Colts" },
-  { id: "30", name: "Jacksonville Jaguars" },
-  { id: "12", name: "Kansas City Chiefs" },
-  { id: "13", name: "Las Vegas Raiders" },
-  { id: "24", name: "Los Angeles Chargers" },
-  { id: "14", name: "Los Angeles Rams" },
-  { id: "15", name: "Miami Dolphins" },
-  { id: "16", name: "Minnesota Vikings" },
-  { id: "17", name: "New England Patriots" },
-  { id: "18", name: "New Orleans Saints" },
-  { id: "19", name: "New York Giants" },
-  { id: "20", name: "New York Jets" },
-  { id: "21", name: "Philadelphia Eagles" },
-  { id: "23", name: "Pittsburgh Steelers" },
-  { id: "25", name: "San Francisco 49ers" },
-  { id: "26", name: "Seattle Seahawks" },
-  { id: "27", name: "Tampa Bay Buccaneers" },
-  { id: "28", name: "Tennessee Titans" },
-  { id: "10", name: "Washington Commanders" },
+  { id: "22", name: "Arizona Cardinals" }, { id: "1", name: "Atlanta Falcons" },
+  { id: "33", name: "Baltimore Ravens" }, { id: "2", name: "Buffalo Bills" },
+  { id: "29", name: "Carolina Panthers" }, { id: "3", name: "Chicago Bears" },
+  { id: "4", name: "Cincinnati Bengals" }, { id: "5", name: "Cleveland Browns" },
+  { id: "6", name: "Dallas Cowboys" }, { id: "7", name: "Denver Broncos" },
+  { id: "8", name: "Detroit Lions" }, { id: "9", name: "Green Bay Packers" },
+  { id: "34", name: "Houston Texans" }, { id: "11", name: "Indianapolis Colts" },
+  { id: "30", name: "Jacksonville Jaguars" }, { id: "12", name: "Kansas City Chiefs" },
+  { id: "13", name: "Las Vegas Raiders" }, { id: "24", name: "Los Angeles Chargers" },
+  { id: "14", name: "Los Angeles Rams" }, { id: "15", name: "Miami Dolphins" },
+  { id: "16", name: "Minnesota Vikings" }, { id: "17", name: "New England Patriots" },
+  { id: "18", name: "New Orleans Saints" }, { id: "19", name: "New York Giants" },
+  { id: "20", name: "New York Jets" }, { id: "21", name: "Philadelphia Eagles" },
+  { id: "23", name: "Pittsburgh Steelers" }, { id: "25", name: "San Francisco 49ers" },
+  { id: "26", name: "Seattle Seahawks" }, { id: "27", name: "Tampa Bay Buccaneers" },
+  { id: "28", name: "Tennessee Titans" }, { id: "10", name: "Washington Commanders" },
 ];
 
 const MLB_TEAMS = [
-  { id: "1", name: "Los Angeles Angels" },
-  { id: "2", name: "Houston Astros" },
-  { id: "3", name: "Oakland Athletics" },
-  { id: "4", name: "Toronto Blue Jays" },
-  { id: "5", name: "Atlanta Braves" },
-  { id: "6", name: "Milwaukee Brewers" },
-  { id: "7", name: "St. Louis Cardinals" },
-  { id: "8", name: "Chicago Cubs" },
-  { id: "9", name: "Seattle Mariners" },
-  { id: "10", name: "Washington Nationals" },
-  { id: "11", name: "New York Mets" },
-  { id: "12", name: "Philadelphia Phillies" },
-  { id: "13", name: "Miami Marlins" },
-  { id: "14", name: "New York Yankees" },
-  { id: "15", name: "San Francisco Giants" },
-  { id: "16", name: "Cleveland Guardians" },
-  { id: "17", name: "Detroit Tigers" },
-  { id: "18", name: "Boston Red Sox" },
-  { id: "19", name: "Colorado Rockies" },
-  { id: "20", name: "Kansas City Royals" },
-  { id: "21", name: "Chicago White Sox" },
-  { id: "22", name: "Minnesota Twins" },
-  { id: "23", name: "Pittsburgh Pirates" },
-  { id: "24", name: "Tampa Bay Rays" },
-  { id: "25", name: "Texas Rangers" },
-  { id: "26", name: "Baltimore Orioles" },
-  { id: "27", name: "San Diego Padres" },
-  { id: "28", name: "Cincinnati Reds" },
-  { id: "29", name: "Arizona Diamondbacks" },
-  { id: "30", name: "Los Angeles Dodgers" },
+  { id: "1", name: "Los Angeles Angels" }, { id: "2", name: "Houston Astros" },
+  { id: "3", name: "Oakland Athletics" }, { id: "4", name: "Toronto Blue Jays" },
+  { id: "5", name: "Atlanta Braves" }, { id: "6", name: "Milwaukee Brewers" },
+  { id: "7", name: "St. Louis Cardinals" }, { id: "8", name: "Chicago Cubs" },
+  { id: "9", name: "Seattle Mariners" }, { id: "10", name: "Washington Nationals" },
+  { id: "11", name: "New York Mets" }, { id: "12", name: "Philadelphia Phillies" },
+  { id: "13", name: "Miami Marlins" }, { id: "14", name: "New York Yankees" },
+  { id: "15", name: "San Francisco Giants" }, { id: "16", name: "Cleveland Guardians" },
+  { id: "17", name: "Detroit Tigers" }, { id: "18", name: "Boston Red Sox" },
+  { id: "19", name: "Colorado Rockies" }, { id: "20", name: "Kansas City Royals" },
+  { id: "21", name: "Chicago White Sox" }, { id: "22", name: "Minnesota Twins" },
+  { id: "23", name: "Pittsburgh Pirates" }, { id: "24", name: "Tampa Bay Rays" },
+  { id: "25", name: "Texas Rangers" }, { id: "26", name: "Baltimore Orioles" },
+  { id: "27", name: "San Diego Padres" }, { id: "28", name: "Cincinnati Reds" },
+  { id: "29", name: "Arizona Diamondbacks" }, { id: "30", name: "Los Angeles Dodgers" },
 ];
 
 const NHL_TEAMS = [
-  { id: "25", name: "Anaheim Ducks" },
-  { id: "1", name: "Boston Bruins" },
-  { id: "2", name: "Buffalo Sabres" },
-  { id: "3", name: "Calgary Flames" },
-  { id: "4", name: "Carolina Hurricanes" },
-  { id: "5", name: "Chicago Blackhawks" },
-  { id: "6", name: "Colorado Avalanche" },
-  { id: "7", name: "Columbus Blue Jackets" },
-  { id: "8", name: "Dallas Stars" },
-  { id: "9", name: "Detroit Red Wings" },
-  { id: "10", name: "Edmonton Oilers" },
-  { id: "26", name: "Florida Panthers" },
-  { id: "11", name: "Los Angeles Kings" },
-  { id: "12", name: "Minnesota Wild" },
-  { id: "13", name: "Montreal Canadiens" },
-  { id: "14", name: "Nashville Predators" },
-  { id: "15", name: "New Jersey Devils" },
-  { id: "16", name: "New York Islanders" },
-  { id: "17", name: "New York Rangers" },
-  { id: "18", name: "Ottawa Senators" },
-  { id: "19", name: "Philadelphia Flyers" },
-  { id: "20", name: "Pittsburgh Penguins" },
-  { id: "28", name: "San Jose Sharks" },
-  { id: "21", name: "Seattle Kraken" },
-  { id: "22", name: "St. Louis Blues" },
-  { id: "23", name: "Tampa Bay Lightning" },
-  { id: "24", name: "Toronto Maple Leafs" },
-  { id: "27", name: "Utah Hockey Club" },
-  { id: "29", name: "Vancouver Canucks" },
-  { id: "30", name: "Vegas Golden Knights" },
-  { id: "31", name: "Washington Capitals" },
-  { id: "32", name: "Winnipeg Jets" },
+  { id: "25", name: "Anaheim Ducks" }, { id: "1", name: "Boston Bruins" },
+  { id: "2", name: "Buffalo Sabres" }, { id: "3", name: "Calgary Flames" },
+  { id: "4", name: "Carolina Hurricanes" }, { id: "5", name: "Chicago Blackhawks" },
+  { id: "6", name: "Colorado Avalanche" }, { id: "7", name: "Columbus Blue Jackets" },
+  { id: "8", name: "Dallas Stars" }, { id: "9", name: "Detroit Red Wings" },
+  { id: "10", name: "Edmonton Oilers" }, { id: "26", name: "Florida Panthers" },
+  { id: "11", name: "Los Angeles Kings" }, { id: "12", name: "Minnesota Wild" },
+  { id: "13", name: "Montreal Canadiens" }, { id: "14", name: "Nashville Predators" },
+  { id: "15", name: "New Jersey Devils" }, { id: "16", name: "New York Islanders" },
+  { id: "17", name: "New York Rangers" }, { id: "18", name: "Ottawa Senators" },
+  { id: "19", name: "Philadelphia Flyers" }, { id: "20", name: "Pittsburgh Penguins" },
+  { id: "28", name: "San Jose Sharks" }, { id: "21", name: "Seattle Kraken" },
+  { id: "22", name: "St. Louis Blues" }, { id: "23", name: "Tampa Bay Lightning" },
+  { id: "24", name: "Toronto Maple Leafs" }, { id: "27", name: "Utah Hockey Club" },
+  { id: "29", name: "Vancouver Canucks" }, { id: "30", name: "Vegas Golden Knights" },
+  { id: "31", name: "Washington Capitals" }, { id: "32", name: "Winnipeg Jets" },
 ];
-
-// ─── ESPN FETCHERS ────────────────────────────────────────────────────────────
 
 const getDateStrings = () => {
   const now = new Date();
@@ -143,6 +79,14 @@ const getDateStrings = () => {
   const today = estNow.toISOString().split("T")[0].replace(/-/g, "");
   const tomorrow = new Date(estNow.getTime() + 86400000).toISOString().split("T")[0].replace(/-/g, "");
   return { today, tomorrow };
+};
+
+const extractPlayers = (data) => {
+  const athletes = data?.athletes || [];
+  if (athletes.length > 0 && athletes[0].items) {
+    return athletes.flatMap(group => group.items || []);
+  }
+  return athletes;
 };
 
 const fetchScoreboard = async (sport, league) => {
@@ -159,38 +103,34 @@ const fetchScoreboard = async (sport, league) => {
   }
 };
 
-const extractPlayers = (data) => {
-  const athletes = data?.athletes || [];
-  // NFL (and some other sports) return athletes grouped: [{position: "Offense", items: [...]}, ...]
-  // NBA returns a flat array of player objects directly
-  if (athletes.length > 0 && athletes[0].items) {
-    return athletes.flatMap(group => group.items || []);
+const fetchOneRoster = async (sport, league, id, name) => {
+  try {
+    const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/${sport}/${league}/teams/${id}/roster`);
+    const data = await res.json();
+    const players = extractPlayers(data);
+    const names = players.map(p => p.displayName || p.fullName).filter(Boolean).join(", ");
+    const injured = players
+      .filter(p => p.injuries && p.injuries.length > 0)
+      .map(p => `${name}: ${p.displayName || p.fullName} — ${p.injuries[0].status}`)
+      .join("\n");
+    return { roster: names ? `${name}: ${names}\n` : "", injuries: injured ? injured + "\n" : "" };
+  } catch {
+    return { roster: "", injuries: "" };
   }
-  return athletes;
 };
 
-const fetchRosters = async (sport, league, teams) => {
-  return Promise.all(
-    teams.map(async ({ id, name }) => {
-      try {
-        const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/${sport}/${league}/teams/${id}/roster`);
-        const data = await res.json();
-        const players = extractPlayers(data);
-        const names = players.map(p => p.displayName || p.fullName).filter(Boolean).join(", ");
-        const injured = players
-          .filter(p => p.injuries && p.injuries.length > 0)
-          .map(p => `${name}: ${p.displayName || p.fullName} — ${p.injuries[0].status}`)
-          .join("\n");
-        return { roster: names ? `${name}: ${names}\n` : "", injuries: injured ? injured + "\n" : "" };
-      } catch {
-        return { roster: "", injuries: "" };
-      }
-    })
-  );
+const fetchActiveRosters = async (sport, league, games, allTeams) => {
+  const activeNames = new Set();
+  games.forEach(game => {
+    game.competitions?.[0]?.competitors?.forEach(c => activeNames.add(c.team?.displayName));
+  });
+  const activeTeams = allTeams.filter(t => activeNames.has(t.name));
+  if (activeTeams.length === 0) return [];
+  return Promise.all(activeTeams.map(({ id, name }) => fetchOneRoster(sport, league, id, name)));
 };
 
 const formatGames = (games, label) => {
-  if (!games.length) return `\nNo ${label} games found.\n`;
+  if (!games.length) return `\nNo ${label} games today or tomorrow.\n`;
   let out = `\nTODAY AND TOMORROW'S ${label} GAMES:\n`;
   games.forEach(game => {
     const comp = game.competitions?.[0];
@@ -207,8 +147,6 @@ const formatGames = (games, label) => {
   return out;
 };
 
-// ─── MAIN DATA FETCH ──────────────────────────────────────────────────────────
-
 const fetchAllSportsData = async () => {
   try {
     const [nbaGames, nflGames, mlbGames, nhlGames] = await Promise.all([
@@ -218,33 +156,28 @@ const fetchAllSportsData = async () => {
       fetchScoreboard("hockey", "nhl"),
     ]);
 
-    const [nbaRosters, nflRosters, mlbRosters, nhlRosters] = await Promise.all([
-      fetchRosters("basketball", "nba", NBA_TEAMS),
-      fetchRosters("american-football", "nfl", NFL_TEAMS),
-      fetchRosters("baseball", "mlb", MLB_TEAMS),
-      fetchRosters("hockey", "nhl", NHL_TEAMS),
+    const [nbaRosters, mlbRosters, nhlRosters, nflRosters] = await Promise.all([
+      fetchActiveRosters("basketball", "nba", nbaGames, NBA_TEAMS),
+      fetchActiveRosters("baseball", "mlb", mlbGames, MLB_TEAMS),
+      fetchActiveRosters("hockey", "nhl", nhlGames, NHL_TEAMS),
+      fetchActiveRosters("american-football", "nfl", nflGames, NFL_TEAMS),
     ]);
 
     let context = "\n\n=== LIVE SPORTS DATA (Updated Now) ===\n";
+    context += "\nNOTE: Live roster data is loaded only for teams with games today/tomorrow. For all other teams, use training knowledge + corrections below.\n";
 
-    // Scores
     context += formatGames(nbaGames, "NBA");
     context += formatGames(nflGames, "NFL");
     context += formatGames(mlbGames, "MLB");
     context += formatGames(nhlGames, "NHL");
 
-    // Rosters
-    context += "\nCURRENT NBA ROSTERS:\n" + nbaRosters.map(r => r.roster).join("");
-    context += "\nCURRENT NFL ROSTERS:\n" + nflRosters.map(r => r.roster).join("");
-    context += "\nCURRENT MLB ROSTERS:\n" + mlbRosters.map(r => r.roster).join("");
-    context += "\nCURRENT NHL ROSTERS:\n" + nhlRosters.map(r => r.roster).join("");
+    if (nbaRosters.length) context += "\nNBA ACTIVE ROSTERS:\n" + nbaRosters.map(r => r.roster).join("");
+    if (nflRosters.length) context += "\nNFL ACTIVE ROSTERS:\n" + nflRosters.map(r => r.roster).join("");
+    if (mlbRosters.length) context += "\nMLB ACTIVE ROSTERS:\n" + mlbRosters.map(r => r.roster).join("");
+    if (nhlRosters.length) context += "\nNHL ACTIVE ROSTERS:\n" + nhlRosters.map(r => r.roster).join("");
 
-    // Injuries
-    context += "\nINJURY REPORT (ALL SPORTS):\n";
-    context += nbaRosters.map(r => r.injuries).join("");
-    context += nflRosters.map(r => r.injuries).join("");
-    context += mlbRosters.map(r => r.injuries).join("");
-    context += nhlRosters.map(r => r.injuries).join("");
+    context += "\nINJURY REPORT:\n";
+    [...nbaRosters, ...nflRosters, ...mlbRosters, ...nhlRosters].forEach(r => { if (r.injuries) context += r.injuries; });
 
     return context;
   } catch (err) {
@@ -253,15 +186,14 @@ const fetchAllSportsData = async () => {
   }
 };
 
-// ─── HANDLER ──────────────────────────────────────────────────────────────────
-
 exports.handler = async (event) => {
   try {
     const { messages, system } = JSON.parse(event.body);
     const sportsContext = await fetchAllSportsData();
-    console.log("Sports context preview:", sportsContext.slice(0, 800));
+    console.log("Sports context preview:", sportsContext.slice(0, 1200));
 
-    const rosterOverride = "\n\nCRITICAL ROSTER RULES:\n- Roster data and game schedule data are completely separate. The absence of games today does NOT mean roster data is unavailable.\n- If roster data is provided above for a team, use it to answer questions about that team's players, depth chart, or personnel — regardless of whether that sport has games today.\n- Never tell the user you don't have roster data just because there are no games scheduled. Rosters are always available.\n- Always use the roster data above over your training data. Never say a player is on a team not listed in the roster data.\n- Never reference a player's previous team. State their current team naturally.\n\nKNOWN ROSTER CORRECTIONS (override any conflicting data):\n- Willson Contreras is on the Boston Red Sox, NOT the St. Louis Cardinals or Houston Astros.";
+    const rosterOverride = "\n\nCRITICAL RULES:\n- Live roster data is only loaded for teams playing today. For teams NOT playing today (including ALL NFL teams in the offseason), use your training knowledge to answer roster questions — you know who plays for each team.\n- NEVER refuse to answer a roster or player question just because there are no games today. Always answer using your training knowledge.\n- When live roster data IS shown above, prefer it over training data.\n- Never reference a player's old team. State their current team naturally.\n\nKNOWN CORRECTIONS (always override training data):\n- Willson Contreras plays for the Boston Red Sox.";
+
     const enrichedSystem = system + sportsContext + rosterOverride;
 
     const res = await fetch("https://api.anthropic.com/v1/messages", {
