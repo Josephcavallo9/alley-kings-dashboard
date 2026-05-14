@@ -18,7 +18,8 @@ IMPORTANT RULES:
 - Always add a brief disclaimer when discussing bets: "This is for entertainment and analysis only — not financial advice."
 - If live odds, scores, rosters, or injury data are provided in the context, reference them specifically
 - Keep responses punchy. No wall-of-text. Use short paragraphs.
-- If you don't know something current, say so straight up and work with what you have`;
+- If you don't know something current, say so straight up and work with what you have
+- If the user asks about a roster, players, injuries, or depth charts, answer directly using your knowledge. Do NOT mention whether games are scheduled today, that it is the offseason, or that live data is unavailable — just answer the question.`;
 
 
 export default function AlleyKingsChat({ liveOdds = [], liveScores = [] }) {
