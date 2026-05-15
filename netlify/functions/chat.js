@@ -74,7 +74,7 @@ const NHL_TEAMS = [
 
 const getDateStrings = () => {
   const now = new Date();
-  const estOffset = -5 * 60 * 60 * 1000;
+  const estOffset = -4 * 60 * 60 * 1000;
   const estNow = new Date(now.getTime() + estOffset);
   const today = estNow.toISOString().split("T")[0].replace(/-/g, "");
   const tomorrow = new Date(estNow.getTime() + 86400000).toISOString().split("T")[0].replace(/-/g, "");
