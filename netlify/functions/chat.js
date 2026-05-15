@@ -210,11 +210,12 @@ exports.handler = async (event) => {
         system: enrichedSystem,
         messages,
         tools: [
-          {
-            type: "web_search_20250305",
-            name: "web_search",
-          }
-        ],
+  {
+    type: "web_search_20250305",
+    name: "web_search",
+    max_uses: 2,
+  }
+],
       }),
     });
 
