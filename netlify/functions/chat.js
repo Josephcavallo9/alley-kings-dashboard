@@ -142,7 +142,7 @@ const formatGames = (games, label) => {
     const homeScore = home?.score || "";
     const awayScore = away?.score || "";
     const gameDate = new Date(game.date).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", timeZone: "America/New_York" });
-out += `${gameDate}: ${awayName} ${awayScore} @ ${homeName} ${homeScore} — ${status}\n`;
+    out += `${gameDate}: ${awayName} ${awayScore} @ ${homeName} ${homeScore} — ${status}\n`;
   });
   return out;
 };
@@ -164,7 +164,6 @@ const fetchAllSportsData = async () => {
     ]);
 
     let context = "\n\n=== LIVE SPORTS DATA (Updated Now) ===\n";
-
     context += formatGames(nbaGames, "NBA");
     context += formatGames(nflGames, "NFL");
     context += formatGames(mlbGames, "MLB");
@@ -191,40 +190,31 @@ exports.handler = async (event) => {
     const sportsContext = await fetchAllSportsData();
     console.log("Sports context preview:", sportsContext.slice(0, 1200));
 
-    const rosterOverride = "\n\nCRITICAL RULES:\n- Always answer roster, player, injury, and depth chart questions directly. Never mention the offseason, game schedules, or data availability.\n- Use live roster data above when available. Otherwise search the web or use your training knowledge.\n- Never reference a player's old team. State their current team naturally.\n- When searching for roster or depth chart info, always search for the most current 2025/2026 season data.\n\nKNOWN CORRECTIONS:\n- Willson Contreras plays for the Boston Red Sox.\n- When answering roster questions, search once then give the full answer immediately. Do not announce that you are searching or that results are incomplete.";
+    const todayStr = new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric", timeZone: "America/New_York" });
+    const rosterOverride = "\n\nTODAY IS: " + todayStr + "\n\nCRITICAL RULES:\n- Always answer roster, player, injury, and depth chart questions directly. Never mention the offseason, game schedules, or data availability.\n- For roster questions, do ONE web search then immediately write a concise answer under 300 words. Never explain that you are searching.\n- Use live roster data above when available. Otherwise search the web.\n- Never reference a player's old team. State their current team naturally.\n\nKNOWN CORRECTIONS:\n- Willson Contreras plays for the Boston Red Sox.";
 
     const enrichedSystem = system + sportsContext + rosterOverride;
 
     const res = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
-  "Content-Type": "application/json",
-  "x-api-key": process.env.REACT_APP_ANTHROPIC_API_KEY,
-  "anthropic-version": "2023-06-01",
-  "anthropic-beta": "web-search-2025-03-05",
-},
+        "Content-Type": "application/json",
+        "x-api-key": process.env.REACT_APP_ANTHROPIC_API_KEY,
+        "anthropic-version": "2023-06-01",
+        "anthropic-beta": "web-search-2025-03-05",
+      },
       body: JSON.stringify({
         model: "claude-sonnet-4-20250514",
         max_tokens: 4096,
         system: enrichedSystem,
         messages,
-        tools: [
-    {
-      type: "web_search_20250305",
-      name: "web_search",
-      max_uses: 1,
-    }
-  ],
-}),
+        tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 1 }],
       }),
     });
 
     const data = await res.json();
     console.log("Anthropic response:", JSON.stringify(data).slice(0, 200));
-
-    // Web search responses may include tool_use blocks — extract only text blocks
-    const textBlock = data.content?.find(block => block.type === "text");
-    const reply = textBlock?.text || "Yo something went wrong on my end. Try again.";
+    const reply = data.content?.filter(b => b.type === "text").map(b => b.text).join("\n") || "Yo something went wrong on my end. Try again.";
     return { statusCode: 200, body: JSON.stringify({ content: [{ type: "text", text: reply }] }) };
   } catch (err) {
     console.log("Error:", err.message);
