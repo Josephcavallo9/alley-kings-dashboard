@@ -164,7 +164,6 @@ const fetchAllSportsData = async () => {
     ]);
 
     let context = "\n\n=== LIVE SPORTS DATA (Updated Now) ===\n";
-    context += "\nNOTE: Live roster data is loaded only for teams with games today/tomorrow. For all other teams, use training knowledge + corrections below.\n";
 
     context += formatGames(nbaGames, "NBA");
     context += formatGames(nflGames, "NFL");
