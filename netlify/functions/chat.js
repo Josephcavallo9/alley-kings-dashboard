@@ -198,15 +198,24 @@ exports.handler = async (event) => {
     const res = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
-        "x-api-key": process.env.REACT_APP_ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01",
-      },
+  "Content-Type": "application/json",
+  "x-api-key": process.env.REACT_APP_ANTHROPIC_API_KEY,
+  "anthropic-version": "2023-06-01",
+  "anthropic-beta": "web-search-2025-03-05",
+},
       body: JSON.stringify({
         model: "claude-sonnet-4-20250514",
         max_tokens: 4096,
         system: enrichedSystem,
         messages,
+        tools: [
+    {
+      type: "web_search_20250305",
+      name: "web_search",
+      max_uses: 1,
+    }
+  ],
+}),
       }),
     });
 
