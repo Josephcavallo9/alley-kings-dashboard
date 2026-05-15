@@ -141,8 +141,8 @@ const formatGames = (games, label) => {
     const awayName = away?.team?.displayName || "TBD";
     const homeScore = home?.score || "";
     const awayScore = away?.score || "";
-    const gameDate = new Date(game.date).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "America/New_York" });
-    out += `${gameDate}: ${awayName} ${awayScore} @ ${homeName} ${homeScore} — ${status}\n`;
+    const gameDate = new Date(game.date).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", timeZone: "America/New_York" });
+out += `${gameDate}: ${awayName} ${awayScore} @ ${homeName} ${homeScore} — ${status}\n`;
   });
   return out;
 };
