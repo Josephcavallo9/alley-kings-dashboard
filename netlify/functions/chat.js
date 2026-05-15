@@ -192,7 +192,7 @@ exports.handler = async (event) => {
     const sportsContext = await fetchAllSportsData();
     console.log("Sports context preview:", sportsContext.slice(0, 1200));
 
-    const rosterOverride = "\n\nCRITICAL RULES:\n- Always answer roster, player, injury, and depth chart questions directly. Never mention the offseason, game schedules, or data availability.\n- Use live roster data above when available. Otherwise search the web or use your training knowledge.\n- Never reference a player's old team. State their current team naturally.\n- When searching for roster or depth chart info, always search for the most current 2025/2026 season data.\n\nKNOWN CORRECTIONS:\n- Willson Contreras plays for the Boston Red Sox.";
+    const rosterOverride = "\n\nCRITICAL RULES:\n- Always answer roster, player, injury, and depth chart questions directly. Never mention the offseason, game schedules, or data availability.\n- Use live roster data above when available. Otherwise search the web or use your training knowledge.\n- Never reference a player's old team. State their current team naturally.\n- When searching for roster or depth chart info, always search for the most current 2025/2026 season data.\n\nKNOWN CORRECTIONS:\n- Willson Contreras plays for the Boston Red Sox.\n- When answering roster questions, search once then give the full answer immediately. Do not announce that you are searching or that results are incomplete.";
 
     const enrichedSystem = system + sportsContext + rosterOverride;
 
@@ -206,7 +206,7 @@ exports.handler = async (event) => {
       },
       body: JSON.stringify({
         model: "claude-sonnet-4-20250514",
-        max_tokens: 2048,
+        max_tokens: 4096,
         system: enrichedSystem,
         messages,
         tools: [
