@@ -217,7 +217,7 @@ export default function AlleyKingsChat({ liveOdds = [], liveScores = [] }) {
           max-width: 92%;
           border: 1px solid #2a2a2a;
           font-family: 'Barlow', sans-serif;
-          white-space: pre-wrap;
+          white-space: pre-line;
         }
         .ak-msg-label {
           font-size: 9px;
