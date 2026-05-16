@@ -187,7 +187,9 @@ const fetchAllSportsData = async () => {
 exports.handler = async (event) => {
   try {
     const { messages, system } = JSON.parse(event.body);
-    const sportsContext = await fetchAllSportsData();
+    const lastMessage = messages[messages.length - 1]?.content?.toLowerCase() || "";
+const needsLiveData = /score|game|tonight|today|tomorrow|schedule|playing|matchup|injury|injured/.test(lastMessage);
+const sportsContext = needsLiveData ? await fetchAllSportsData() : "\n\n=== Use your training knowledge and web search for this query ===\n";
     console.log("Sports context preview:", sportsContext.slice(0, 1200));
 
     const todayStr = new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric", timeZone: "America/New_York" });
