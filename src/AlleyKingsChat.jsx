@@ -378,7 +378,7 @@ export default function AlleyKingsChat({ liveOdds = [], liveScores = [] }) {
                 <div className={m.role === "user" ? "ak-msg-user" : "ak-msg-assistant"}>
   {m.role === "assistant" 
   ? m.content
-      .replace(/:\n/g, ": ")
+      .replace(/:\s*\n/g, ": ")
       .replace(/\*\*(.*?)\*\*/g, "$1")
       .replace(/\n\s*\.\s*\n/g, " ")
       .replace(/\n\./g, ".")
