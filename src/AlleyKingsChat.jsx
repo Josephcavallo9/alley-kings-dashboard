@@ -217,7 +217,7 @@ export default function AlleyKingsChat({ liveOdds = [], liveScores = [] }) {
           max-width: 92%;
           border: 1px solid #2a2a2a;
           font-family: 'Barlow', sans-serif;
-          white-space: pre-line;
+          white-space: pre-wrap;
         }
         .ak-msg-label {
           font-size: 9px;
@@ -375,7 +375,9 @@ export default function AlleyKingsChat({ liveOdds = [], liveScores = [] }) {
             {messages.map((m, i) => (
               <div key={i}>
                 <div className="ak-msg-label">{m.role === "user" ? "YOU" : "AK ANALYST"}</div>
-                <div className={m.role === "user" ? "ak-msg-user" : "ak-msg-assistant"}>{m.content}</div>
+                <div className={m.role === "user" ? "ak-msg-user" : "ak-msg-assistant"}>
+  {m.role === "assistant" ? m.content.replace(/:\n/g, ": ") : m.content}
+</div>
               </div>
             ))}
             {loading && (
