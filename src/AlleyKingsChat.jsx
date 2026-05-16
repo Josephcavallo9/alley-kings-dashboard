@@ -382,6 +382,7 @@ export default function AlleyKingsChat({ liveOdds = [], liveScores = [] }) {
       .replace(/\*\*(.*?)\*\*/g, "$1")
       .replace(/\n\s*\.\s*\n/g, " ")
       .replace(/\n\./g, ".")
+      .replace(/\n{2,}/g, "\n")
   : m.content}
 </div>
               </div>
