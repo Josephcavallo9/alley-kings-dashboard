@@ -129,15 +129,23 @@ const ScoresBanner = ({ scores, games, activeSport, oddsLoading }) => {
   const hasScores = filteredScores.length > 0;
   const hasGames = filteredGames.length > 0;
 
-  if (!hasScores && !hasGames) {
-    return (
-      <div style={{ background: "#0f0f0f", borderBottom: "1px solid #1e1e1e", padding: "10px 16px" }}>
-        <span style={{ color: "#444", fontSize: 11, fontWeight: 700 }}>
-          {oddsLoading ? "Loading scores & odds..." : "No games available"}
-        </span>
-      </div>
-    );
-  }
+  if (oddsLoading) {
+  return (
+    <div style={{ background: "#0f0f0f", borderBottom: "1px solid #1e1e1e", padding: "12px 16px", display: "flex", alignItems: "center", gap: 8 }}>
+      <span style={{ background: "#E8192C", color: "white", fontSize: 8, fontWeight: 900, letterSpacing: 1.5, padding: "3px 8px", borderRadius: 4 }}>SCORES</span>
+      <span style={{ color: "#555", fontSize: 11, fontWeight: 700 }}>Loading scores & odds...</span>
+    </div>
+  );
+}
+
+if (!hasScores && !hasGames) {
+  return (
+    <div style={{ background: "#0f0f0f", borderBottom: "1px solid #1e1e1e", padding: "12px 16px", display: "flex", alignItems: "center", gap: 8 }}>
+      <span style={{ background: "#333", color: "#666", fontSize: 8, fontWeight: 900, letterSpacing: 1.5, padding: "3px 8px", borderRadius: 4 }}>SCORES</span>
+      <span style={{ color: "#444", fontSize: 11, fontWeight: 700 }}>No games available right now</span>
+    </div>
+  );
+}
 
   return (
     <div style={{ background: "#0f0f0f", borderBottom: "1px solid #1e1e1e" }}>
