@@ -7,7 +7,7 @@ const storyFilters = ["ALL", "BREAKING", "CULTURE", "TRADES", "SCORES", "VIRAL"]
 const clipFilters = ["ALL", "LIVE", "SCHEDULED", "DRAFTS"];
 const betFilters = ["ALL", "PENDING", "WON", "LOST", "Joe", "Stevie", "Will"];
 
-  const members = [
+const members = [
   { name: "Joe", color: "#22C55E", emoji: "👑", wins: 0, losses: 0, pending: 0, pnl: "$0.00" },
   { name: "Stevie", color: "#E8192C", emoji: "😤", wins: 0, losses: 0, pending: 0, pnl: "$0.00" },
   { name: "Will", color: "#3B82F6", emoji: "🧠", wins: 0, losses: 0, pending: 0, pnl: "$0.00" },
@@ -121,6 +121,159 @@ const TeamLogo = ({ teamName, sport, size = 32 }) => {
   return <img src={logoUrl} alt={teamName} onError={() => setImgError(true)} style={{ width: size, height: size, objectFit: "contain", flexShrink: 0 }} />;
 };
 
+// ─── SCORES BANNER ────────────────────────────────────────────────────────────
+const ScoresBanner = ({ scores, games, activeSport, oddsLoading }) => {
+  const filteredScores = activeSport === "ALL" ? scores : scores.filter(g => g.sportConfig.label === activeSport);
+  const filteredGames = activeSport === "ALL" ? games : games.filter(g => g.sportConfig.label === activeSport);
+
+  const hasScores = filteredScores.length > 0;
+  const hasGames = filteredGames.length > 0;
+
+  if (!hasScores && !hasGames) {
+    return (
+      <div style={{ background: "#0f0f0f", borderBottom: "1px solid #1e1e1e", padding: "10px 16px" }}>
+        <span style={{ color: "#444", fontSize: 11, fontWeight: 700 }}>
+          {oddsLoading ? "Loading scores & odds..." : "No games available"}
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ background: "#0f0f0f", borderBottom: "1px solid #1e1e1e" }}>
+      {/* SCORES ROW */}
+      {hasScores && (
+        <div style={{ borderBottom: hasGames ? "1px solid #1a1a1a" : "none" }}>
+          <div style={{ display: "flex", alignItems: "center", overflowX: "auto", scrollbarWidth: "none", msOverflowStyle: "none" }}
+            className="banner-scroll">
+            {/* Label pill */}
+            <div style={{ flexShrink: 0, display: "flex", alignItems: "center", padding: "0 12px 0 14px", height: 52 }}>
+              <span style={{ background: "#E8192C", color: "white", fontSize: 8, fontWeight: 900, letterSpacing: 1.5, padding: "3px 8px", borderRadius: 4 }}>
+                FINAL
+              </span>
+            </div>
+            {/* Divider */}
+            <div style={{ width: 1, height: 30, background: "#222", flexShrink: 0 }} />
+            {/* Score cards */}
+            {filteredScores.map((game, i) => {
+              const cfg = game.sportConfig;
+              const home = game.scores?.find(s => s.name === game.home_team);
+              const away = game.scores?.find(s => s.name === game.away_team);
+              const homeScore = parseInt(home?.score || 0);
+              const awayScore = parseInt(away?.score || 0);
+              const homeWon = homeScore > awayScore;
+              return (
+                <div key={i} style={{
+                  flexShrink: 0,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  padding: "8px 16px",
+                  borderRight: "1px solid #1e1e1e",
+                  height: 52,
+                  minWidth: 200,
+                }}>
+                  {/* Sport emoji */}
+                  <span style={{ fontSize: 12, flexShrink: 0 }}>{cfg.emoji}</span>
+                  {/* Teams + scores */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <TeamLogo teamName={game.away_team} sport={cfg.espnSport} size={16} />
+                      <span style={{ color: !homeWon ? "white" : "#555", fontSize: 11, fontWeight: !homeWon ? 800 : 500, minWidth: 60 }}>
+                        {getTeamAbbr(game.away_team)}
+                      </span>
+                      <span style={{ color: !homeWon ? "white" : "#555", fontSize: 13, fontWeight: 900, marginLeft: "auto" }}>
+                        {away?.score ?? "—"}
+                      </span>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <TeamLogo teamName={game.home_team} sport={cfg.espnSport} size={16} />
+                      <span style={{ color: homeWon ? "white" : "#555", fontSize: 11, fontWeight: homeWon ? 800 : 500, minWidth: 60 }}>
+                        {getTeamAbbr(game.home_team)}
+                      </span>
+                      <span style={{ color: homeWon ? "white" : "#555", fontSize: 13, fontWeight: 900, marginLeft: "auto" }}>
+                        {home?.score ?? "—"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ODDS ROW */}
+      {hasGames && (
+        <div style={{ display: "flex", alignItems: "center", overflowX: "auto", scrollbarWidth: "none", msOverflowStyle: "none" }}
+          className="banner-scroll">
+          {/* Label pill */}
+          <div style={{ flexShrink: 0, display: "flex", alignItems: "center", padding: "0 12px 0 14px", height: 52 }}>
+            <span style={{ background: "#1a3a1a", color: "#4ade80", fontSize: 8, fontWeight: 900, letterSpacing: 1.5, padding: "3px 8px", borderRadius: 4 }}>
+              ODDS
+            </span>
+          </div>
+          {/* Divider */}
+          <div style={{ width: 1, height: 30, background: "#222", flexShrink: 0 }} />
+          {/* Odds cards */}
+          {filteredGames.map((game, i) => {
+            const cfg = game.sportConfig;
+            const bk = game.bookmakers?.[0];
+            const mkt = bk?.markets?.find(m => m.key === "h2h");
+            const homeOdds = mkt?.outcomes?.find(o => o.name === game.home_team)?.price;
+            const awayOdds = mkt?.outcomes?.find(o => o.name === game.away_team)?.price;
+            const gameDate = new Date(game.commence_time);
+            const isToday = gameDate.toDateString() === new Date().toDateString();
+            const timeStr = gameDate.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+            const dateStr = gameDate.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+
+            return (
+              <div key={i} style={{
+                flexShrink: 0,
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                padding: "8px 16px",
+                borderRight: "1px solid #1e1e1e",
+                height: 52,
+                minWidth: 220,
+              }}>
+                {/* Sport emoji */}
+                <span style={{ fontSize: 12, flexShrink: 0 }}>{cfg.emoji}</span>
+                {/* Teams + odds */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 2, flex: 1 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <TeamLogo teamName={game.away_team} sport={cfg.espnSport} size={16} />
+                    <span style={{ color: "#ccc", fontSize: 11, fontWeight: 700, minWidth: 55 }}>{getTeamAbbr(game.away_team)}</span>
+                    <span style={{
+                      color: awayOdds > 0 ? "#4ade80" : "#f87171",
+                      fontSize: 11, fontWeight: 900, marginLeft: "auto"
+                    }}>{formatOdds(awayOdds)}</span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <TeamLogo teamName={game.home_team} sport={cfg.espnSport} size={16} />
+                    <span style={{ color: "#ccc", fontSize: 11, fontWeight: 700, minWidth: 55 }}>{getTeamAbbr(game.home_team)}</span>
+                    <span style={{
+                      color: homeOdds > 0 ? "#4ade80" : "#f87171",
+                      fontSize: 11, fontWeight: 900, marginLeft: "auto"
+                    }}>{formatOdds(homeOdds)}</span>
+                  </div>
+                </div>
+                {/* Time */}
+                <div style={{ flexShrink: 0, textAlign: "right" }}>
+                  <span style={{ color: "#444", fontSize: 9, fontWeight: 700 }}>
+                    {isToday ? timeStr : dateStr}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
+
 export default function AlleyKingsDashboard() {
   const [activeTab, setActiveTab] = useState("BRIEFING");
   const [activeSport, setActiveSport] = useState("ALL");
@@ -137,7 +290,7 @@ export default function AlleyKingsDashboard() {
   const [loading, setLoading] = useState(true);
   const [oddsLoading, setOddsLoading] = useState(true);
 
-useEffect(() => {
+  useEffect(() => {
     const fetchDbData = async () => {
       const { data: betsData } = await supabase.from("bets").select("*").order("created_at", { ascending: false });
       const { data: clipsData } = await supabase.from("clips").select("*").order("created_at", { ascending: false });
@@ -146,6 +299,7 @@ useEffect(() => {
     };
     fetchDbData();
   }, []);
+
   useEffect(() => {
     const fetchAllData = async () => {
       try {
@@ -233,6 +387,7 @@ useEffect(() => {
         .filter-scroll::-webkit-scrollbar { display: none; }
         .sport-scroll { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
         .sport-scroll::-webkit-scrollbar { display: none; }
+        .banner-scroll::-webkit-scrollbar { display: none; }
         .tab { flex: 1; text-align: center; padding: 14px 0 10px; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; color: #888; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s; }
         .tab.active { color: #E8192C; border-bottom-color: #E8192C; }
         .filter-btn { flex-shrink: 0; padding: 5px 14px; border-radius: 20px; border: none; font-size: 11px; font-weight: 700; letter-spacing: 1px; cursor: pointer; }
@@ -245,11 +400,11 @@ useEffect(() => {
         .stat-card { background: white; border-radius: 12px; padding: 14px 10px; min-width: 100px; flex-shrink: 0; text-align: center; border-top: 3px solid; }
         .clip-card { background: white; border-radius: 12px; padding: 14px; }
         .bet-card {
-  background: #fff;
-  border-radius: 18px;
-  border-left: 5px solid #e8192c;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.04);
-}
+          background: #fff;
+          border-radius: 18px;
+          border-left: 5px solid #e8192c;
+          box-shadow: 0 4px 18px rgba(0,0,0,0.04);
+        }
         .news-ticker { overflow: hidden; background: #E8192C; padding: 7px 0; }
         .news-ticker-inner { display: inline-block; white-space: nowrap; animation: newsticker 90s linear infinite; }
         .odds-ticker { overflow: hidden; background: #141414; border-top: 1px solid #222; border-bottom: 1px solid #222; padding: 5px 0; }
@@ -259,180 +414,60 @@ useEffect(() => {
         .score-card { background: #111; border-radius: 12px; padding: 14px; flex-shrink: 0; min-width: 175px; }
         .upcoming-card { background: #111; border-radius: 12px; padding: 14px; flex-shrink: 0; min-width: 175px; }
         @media (max-width: 600px) {
-  .bet-card {
-    grid-template-columns: 1fr !important;
-    gap: 14px;
-  }
-
-  .bet-card > div:nth-child(2) {
-    text-align: left !important;
-    border-left: none !important;
-    border-right: none !important;
-    border-top: 1px solid #eee;
-    border-bottom: 1px solid #eee;
-    padding: 12px 0 !important;
-  }
-
-  .bet-card > div:nth-child(3) {
-    text-align: left !important;
-  }
-}
-  .briefing-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 360px;
-  gap: 22px;
-  padding: 12px 16px 24px;
-  align-items: start;
-}
-
-.featured-story {
-  display: block;
-  text-decoration: none;
-  color: inherit;
-  background: #fff;
-  border-radius: 18px;
-  overflow: hidden;
-  border: 1px solid #f0f0f0;
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.06);
-}
-
-.featured-image {
-  height: 360px;
-  background: #111;
-  overflow: hidden;
-}
-
-.featured-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.featured-placeholder {
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 72px;
-  background: linear-gradient(135deg, #111, #e8192c);
-}
-
-.featured-content {
-  padding: 22px;
-}
-
-.featured-title {
-  font-size: 34px;
-  font-weight: 900;
-  line-height: 1.05;
-  color: #111;
-  margin-bottom: 10px;
-}
-
-.featured-desc {
-  font-family: Arial, sans-serif;
-  font-size: 14px;
-  line-height: 1.5;
-  color: #666;
-  margin-bottom: 14px;
-}
-
-.featured-date {
-  font-size: 11px;
-  color: #999;
-  font-weight: 800;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-}
-
-.briefing-sidebar {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.sidebar-card {
-  background: #111;
-  color: #fff;
-  border-radius: 18px;
-  padding: 18px;
-  border: 1px solid #222;
-}
-
-.sidebar-title {
-  font-size: 20px;
-  font-weight: 900;
-  margin-bottom: 16px;
-}
-
-.trending-list {
-  max-height: 360px;
-  overflow-y: auto;
-  padding-right: 6px;
-}
-
-.trending-item {
-  display: grid;
-  grid-template-columns: 12px 1fr;
-  gap: 10px;
-  text-decoration: none;
-  color: inherit;
-  padding: 12px 0;
-  border-bottom: 1px solid #252525;
-}
-
-.trending-headline {
-  font-family: Arial, sans-serif;
-  font-size: 13px;
-  line-height: 1.35;
-  color: #ddd;
-}
-
-.trending-meta {
-  margin-top: 5px;
-  font-size: 10px;
-  color: #777;
-  font-weight: 700;
-}
-
-.social-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
-.social-row a {
-  text-align: center;
-  background: #e8192c;
-  color: #fff;
-  text-decoration: none;
-  border-radius: 10px;
-  padding: 10px;
-  font-size: 12px;
-  font-weight: 900;
-}
-
-@media (max-width: 900px) {
-  .briefing-layout {
-    grid-template-columns: 1fr;
-  }
-
-  .featured-image {
-    height: 240px;
-  }
-
-  .featured-title {
-    font-size: 26px;
-  }
-}
+          .bet-card { grid-template-columns: 1fr !important; gap: 14px; }
+          .bet-card > div:nth-child(2) { text-align: left !important; border-left: none !important; border-right: none !important; border-top: 1px solid #eee; border-bottom: 1px solid #eee; padding: 12px 0 !important; }
+          .bet-card > div:nth-child(3) { text-align: left !important; }
+        }
+        .briefing-layout {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) 360px;
+          gap: 22px;
+          padding: 12px 16px 24px;
+          align-items: start;
+        }
+        .featured-story {
+          display: block;
+          text-decoration: none;
+          color: inherit;
+          background: #fff;
+          border-radius: 18px;
+          overflow: hidden;
+          border: 1px solid #f0f0f0;
+          box-shadow: 0 8px 28px rgba(0,0,0,0.06);
+        }
+        .featured-image { height: 360px; background: #111; overflow: hidden; }
+        .featured-image img { width: 100%; height: 100%; object-fit: cover; }
+        .featured-placeholder { height: 100%; display: flex; align-items: center; justify-content: center; font-size: 72px; background: linear-gradient(135deg, #111, #e8192c); }
+        .featured-content { padding: 22px; }
+        .featured-title { font-size: 34px; font-weight: 900; line-height: 1.05; color: #111; margin-bottom: 10px; }
+        .featured-desc { font-family: Arial, sans-serif; font-size: 14px; line-height: 1.5; color: #666; margin-bottom: 14px; }
+        .featured-date { font-size: 11px; color: #999; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
+        .briefing-sidebar { display: flex; flex-direction: column; gap: 16px; }
+        .sidebar-card { background: #111; color: #fff; border-radius: 18px; padding: 18px; border: 1px solid #222; }
+        .sidebar-title { font-size: 20px; font-weight: 900; margin-bottom: 16px; }
+        .trending-list { max-height: 360px; overflow-y: auto; padding-right: 6px; }
+        .trending-item { display: grid; grid-template-columns: 12px 1fr; gap: 10px; text-decoration: none; color: inherit; padding: 12px 0; border-bottom: 1px solid #252525; }
+        .trending-headline { font-family: Arial, sans-serif; font-size: 13px; line-height: 1.35; color: #ddd; }
+        .trending-meta { margin-top: 5px; font-size: 10px; color: #777; font-weight: 700; }
+        .social-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .social-row a { text-align: center; background: #e8192c; color: #fff; text-decoration: none; border-radius: 10px; padding: 10px; font-size: 12px; font-weight: 900; }
+        @media (max-width: 900px) {
+          .briefing-layout { grid-template-columns: 1fr; }
+          .featured-image { height: 240px; }
+          .featured-title { font-size: 26px; }
+        }
       `}</style>
-<div className="odds-ticker">
+
+      {/* ── TOP ODDS TICKER ── */}
+      <div className="odds-ticker">
         <div className="odds-ticker-inner">
           <span style={{ color: "#666", fontSize: 10, fontWeight: 700, letterSpacing: 0.5, paddingRight: 40 }}>
             {oddsTickerString} &nbsp;&nbsp;&nbsp; {oddsTickerString}
           </span>
         </div>
       </div>
+
+      {/* ── SCOREBOARD HEADER ── */}
       <div style={{ background: "#0D0D0D", padding: "12px 24px 14px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
           <div style={{ background: "white", borderRadius: 6, padding: "4px 10px" }}>
@@ -443,6 +478,7 @@ useEffect(() => {
           <span style={{ color: "#555", fontSize: 10, fontWeight: 700 }}>{oddsLoading ? "Loading..." : `${scores.length} FINALS`}</span>
         </div>
 
+        {/* Sport Filter Tabs */}
         <div className="sport-scroll" style={{ marginBottom: 14 }}>
           {["ALL", ...SPORT_CONFIGS.map(s => `${s.emoji} ${s.label}`)].map((s, i) => (
             <button key={s} onClick={() => setActiveSport(i === 0 ? "ALL" : SPORT_CONFIGS[i - 1].label)}
@@ -452,6 +488,7 @@ useEffect(() => {
           ))}
         </div>
 
+        {/* ── LARGE SCORE CARDS (existing full scoreboard) ── */}
         {filteredScores.length > 0 && (
           <div style={{ marginBottom: 14 }}>
             <div style={{ color: "#444", fontSize: 9, fontWeight: 800, letterSpacing: 2, marginBottom: 8 }}>FINAL SCORES</div>
@@ -534,8 +571,7 @@ useEffect(() => {
         )}
       </div>
 
-      
-
+      {/* ── NEWS TICKER ── */}
       <div className="news-ticker">
         <div className="news-ticker-inner">
           <span style={{ color: "white", fontSize: 11, fontWeight: 700, paddingRight: 60 }}>
@@ -544,6 +580,7 @@ useEffect(() => {
         </div>
       </div>
 
+      {/* ── WHITE CONTENT AREA ── */}
       <div style={{ background: "white", borderRadius: "20px 20px 0 0" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "20px 16px 16px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -563,12 +600,22 @@ useEffect(() => {
           </div>
         </div>
 
+        {/* ── MAIN TABS ── */}
         <div style={{ display: "flex", borderBottom: "1px solid #eee" }}>
           {[{ key: "BRIEFING", label: "📰 BRIEFING" }, { key: "CLIPS", label: "🎙️ PODCAST CLIPS" }, { key: "BETS", label: "🎲 OUR BETS" }].map(t => (
             <div key={t.key} className={`tab ${activeTab === t.key ? "active" : ""}`} onClick={() => setActiveTab(t.key)}>{t.label}</div>
           ))}
         </div>
 
+        {/* ── SCORES + ODDS BANNER (below tabs, above all content) ── */}
+        <ScoresBanner
+          scores={scores}
+          games={games}
+          activeSport={activeSport}
+          oddsLoading={oddsLoading}
+        />
+
+        {/* ── TAB CONTENT ── */}
         {activeTab === "BRIEFING" && (
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderBottom: "1px solid #eee" }}>
@@ -602,145 +649,74 @@ useEffect(() => {
               ))}
             </div>
             {loading ? (
-  <div style={{ padding: 30, textAlign: "center", color: "#888", fontSize: 13 }}>
-    Loading latest stories...
-  </div>
-) : (
-  <div className="briefing-layout">
-    {/* FEATURED STORY */}
-{(() => {
-  const featured = filteredArticles[0] || {
-    title: "Alley Kings Daily Briefing",
-    description:
-      "Your home for sports culture, picks, reactions, viral moments, and the biggest stories across the game.",
-    source_name: "Alley Kings Media",
-    publishedAt: new Date().toISOString(),
-    url: "#",
-    image_url: "",
-  };
-
-  const cat = filteredArticles[0]
-    ? categorizeArticle(featured)
-    : { color: "#E8192C", emoji: "👑", type: "FEATURED" };
-
-  return (
-    <a
-      href={featured.url}
-      target={featured.url === "#" ? "_self" : "_blank"}
-      rel="noopener noreferrer"
-      className="featured-story"
-    >
-      <div className="featured-image">
-        {featured.image_url ? (
-          <img src={featured.image_url} alt={featured.title} />
-        ) : (
-          <div className="featured-placeholder">
-            <div style={{ textAlign: "center" }}>
-              <div style={{ fontSize: 72, marginBottom: 10 }}>👑</div>
-              <div style={{ fontSize: 24, fontWeight: 900, color: "#fff" }}>
-                ALLEY KINGS
-              </div>
-              <div style={{ fontSize: 11, color: "#ddd", letterSpacing: 2 }}>
-                SPORTS CULTURE INTELLIGENCE
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      <div className="featured-content">
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            marginBottom: 10,
-          }}
-        >
-          <span
-            style={{
-              background: cat.color + "22",
-              color: cat.color,
-              fontSize: 10,
-              fontWeight: 900,
-              padding: "4px 8px",
-              borderRadius: 6,
-            }}
-          >
-            {cat.emoji} {cat.type}
-          </span>
-
-          <span style={{ color: "#888", fontSize: 10, fontWeight: 800 }}>
-            {featured.source_name || "Sports News"}
-          </span>
-        </div>
-
-        <div className="featured-title">{featured.title}</div>
-
-        <div className="featured-desc">
-          {featured.description ||
-            "Latest sports culture story from across the game."}
-        </div>
-
-        <div className="featured-date">
-          {new Date(featured.publishedAt).toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-          })}
-        </div>
-      </div>
-    </a>
-  );
-})()}
-
-    {/* RIGHT SIDEBAR */}
-    <div className="briefing-sidebar">
-      <div className="sidebar-card">
-        <div className="sidebar-title">🔥 Trending Stories</div>
-
-        <div className="trending-list">
-          {filteredArticles.slice(1, 8).map((article, i) => {
-            const cat = categorizeArticle(article);
-
-            return (
-              <a
-                key={i}
-                href={article.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="trending-item"
-              >
-                <span style={{ color: cat.color }}>●</span>
-                <div>
-                  <div className="trending-headline">{article.title}</div>
-                  <div className="trending-meta">
-                    {article.source_name || "Sports News"} ·{" "}
-                    {new Date(article.publishedAt).toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                    })}
+              <div style={{ padding: 30, textAlign: "center", color: "#888", fontSize: 13 }}>Loading latest stories...</div>
+            ) : (
+              <div className="briefing-layout">
+                {(() => {
+                  const featured = filteredArticles[0] || {
+                    title: "Alley Kings Daily Briefing",
+                    description: "Your home for sports culture, picks, reactions, viral moments, and the biggest stories across the game.",
+                    source_name: "Alley Kings Media",
+                    publishedAt: new Date().toISOString(),
+                    url: "#",
+                    image_url: "",
+                  };
+                  const cat = filteredArticles[0] ? categorizeArticle(featured) : { color: "#E8192C", emoji: "👑", type: "FEATURED" };
+                  return (
+                    <a href={featured.url} target={featured.url === "#" ? "_self" : "_blank"} rel="noopener noreferrer" className="featured-story">
+                      <div className="featured-image">
+                        {featured.image_url ? (
+                          <img src={featured.image_url} alt={featured.title} />
+                        ) : (
+                          <div className="featured-placeholder">
+                            <div style={{ textAlign: "center" }}>
+                              <div style={{ fontSize: 72, marginBottom: 10 }}>👑</div>
+                              <div style={{ fontSize: 24, fontWeight: 900, color: "#fff" }}>ALLEY KINGS</div>
+                              <div style={{ fontSize: 11, color: "#ddd", letterSpacing: 2 }}>SPORTS CULTURE INTELLIGENCE</div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      <div className="featured-content">
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                          <span style={{ background: cat.color + "22", color: cat.color, fontSize: 10, fontWeight: 900, padding: "4px 8px", borderRadius: 6 }}>{cat.emoji} {cat.type}</span>
+                          <span style={{ color: "#888", fontSize: 10, fontWeight: 800 }}>{featured.source_name || "Sports News"}</span>
+                        </div>
+                        <div className="featured-title">{featured.title}</div>
+                        <div className="featured-desc">{featured.description || "Latest sports culture story from across the game."}</div>
+                        <div className="featured-date">{new Date(featured.publishedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</div>
+                      </div>
+                    </a>
+                  );
+                })()}
+                <div className="briefing-sidebar">
+                  <div className="sidebar-card">
+                    <div className="sidebar-title">🔥 Trending Stories</div>
+                    <div className="trending-list">
+                      {filteredArticles.slice(1, 8).map((article, i) => {
+                        const cat = categorizeArticle(article);
+                        return (
+                          <a key={i} href={article.url} target="_blank" rel="noopener noreferrer" className="trending-item">
+                            <span style={{ color: cat.color }}>●</span>
+                            <div>
+                              <div className="trending-headline">{article.title}</div>
+                              <div className="trending-meta">{article.source_name || "Sports News"} · {new Date(article.publishedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</div>
+                            </div>
+                          </a>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div className="sidebar-card social-card">
+                    <div className="sidebar-title">🎥 Follow Alley Kings</div>
+                    <div className="social-row">
+                      <a href="https://www.tiktok.com/" target="_blank" rel="noopener noreferrer">TikTok</a>
+                      <a href="https://twitter.com/" target="_blank" rel="noopener noreferrer">X / Twitter</a>
+                    </div>
                   </div>
                 </div>
-              </a>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className="sidebar-card social-card">
-        <div className="sidebar-title">🎥 Follow Alley Kings</div>
-        <div className="social-row">
-          <a href="https://www.tiktok.com/" target="_blank" rel="noopener noreferrer">
-            TikTok
-          </a>
-          <a href="https://twitter.com/" target="_blank" rel="noopener noreferrer">
-            X / Twitter
-          </a>
-        </div>
-      </div>
-    </div>
-  </div>
-)}
+              </div>
+            )}
           </div>
         )}
 
@@ -831,183 +807,40 @@ useEffect(() => {
                   <button key={f} className="filter-btn" onClick={() => setBetFilter(f)} style={{ background: betFilter === f ? "#0A0A0A" : "#F4F4F4", color: betFilter === f ? "white" : "#888" }}>{f}</button>
                 ))}
               </div>
-             {filteredBets.map(b => {
-  const s = statusStyle(b.status);
-  const member = members.find(m => m.name === b.bettor);
-
-  return (
-    <div
-      key={b.id}
-      className="bet-card"
-      style={{
-        borderLeftColor: member?.color || "#E8192C",
-        display: "grid",
-        gridTemplateColumns: "1fr 90px 100px",
-        alignItems: "center",
-        gap: 14,
-        padding: "16px 18px",
-        marginBottom: 12,
-        minHeight: 105,
-      }}
-    >
-      {/* LEFT SIDE */}
-      <div style={{ minWidth: 0 }}>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            marginBottom: 10,
-            flexWrap: "wrap",
-          }}
-        >
-          <span
-            style={{
-              background: member?.color || "#888",
-              color: "#fff",
-              fontSize: 10,
-              fontWeight: 800,
-              borderRadius: 999,
-              padding: "4px 10px",
-            }}
-          >
-            {b.bettor}
-          </span>
-
-          <span
-            style={{
-              background: "#F4F4F4",
-              color: "#777",
-              fontSize: 10,
-              fontWeight: 800,
-              borderRadius: 999,
-              padding: "4px 10px",
-            }}
-          >
-            {b.sport || "NBA"}
-          </span>
-        </div>
-
-        <div style={{ fontSize: 10, color: "#888", marginBottom: 3 }}>
-          {b.type}
-        </div>
-
-        <div
-          style={{
-            fontSize: 15,
-            fontWeight: 900,
-            color: "#111",
-            lineHeight: 1.25,
-            maxWidth: "100%",
-          }}
-        >
-          {b.detail}
-        </div>
-
-        <div style={{ fontSize: 11, color: "#888", marginTop: 4 }}>
-          {b.odds}
-        </div>
-
-        {b.note && (
-          <div
-            style={{
-              fontSize: 11,
-              color: "#888",
-              fontStyle: "italic",
-              marginTop: 12,
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-            }}
-          >
-            💬 {b.note}
-          </div>
-        )}
-      </div>
-
-      {/* STAKE */}
-      <div
-        style={{
-          textAlign: "center",
-          borderLeft: "1px solid #eee",
-          borderRight: "1px solid #eee",
-          padding: "0 10px",
-        }}
-      >
-        <div
-          style={{
-            fontSize: 9,
-            color: "#888",
-            fontWeight: 800,
-            letterSpacing: 1,
-            marginBottom: 4,
-          }}
-        >
-          STAKE
-        </div>
-
-        <div
-          style={{
-            fontSize: 22,
-            fontWeight: 900,
-            color: "#111",
-          }}
-        >
-          ${b.stake}
-        </div>
-      </div>
-
-      {/* STATUS + TO WIN */}
-      <div style={{ textAlign: "right" }}>
-        <div
-          style={{
-            display: "inline-block",
-            background: s.bg,
-            color: s.text,
-            fontSize: 9,
-            fontWeight: 900,
-            borderRadius: 999,
-            padding: "5px 9px",
-            marginBottom: 12,
-          }}
-        >
-          {b.status === "PENDING"
-            ? "⏳ PENDING"
-            : b.status === "WON"
-            ? "✅ WON"
-            : "❌ LOST"}
-        </div>
-
-        <div
-          style={{
-            fontSize: 9,
-            color: "#888",
-            fontWeight: 800,
-            letterSpacing: 1,
-            marginBottom: 4,
-          }}
-        >
-          TO WIN
-        </div>
-
-        <div
-          style={{
-            fontSize: 22,
-            fontWeight: 900,
-            color: "#3B82F6",
-          }}
-        >
-          ${b.toWin}
-        </div>
-      </div>
-    </div>
-  );
-})}
+              {filteredBets.map(b => {
+                const s = statusStyle(b.status);
+                const member = members.find(m => m.name === b.bettor);
+                return (
+                  <div key={b.id} className="bet-card" style={{ borderLeftColor: member?.color || "#E8192C", display: "grid", gridTemplateColumns: "1fr 90px 100px", alignItems: "center", gap: 14, padding: "16px 18px", marginBottom: 12, minHeight: 105 }}>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
+                        <span style={{ background: member?.color || "#888", color: "#fff", fontSize: 10, fontWeight: 800, borderRadius: 999, padding: "4px 10px" }}>{b.bettor}</span>
+                        <span style={{ background: "#F4F4F4", color: "#777", fontSize: 10, fontWeight: 800, borderRadius: 999, padding: "4px 10px" }}>{b.sport || "NBA"}</span>
+                      </div>
+                      <div style={{ fontSize: 10, color: "#888", marginBottom: 3 }}>{b.type}</div>
+                      <div style={{ fontSize: 15, fontWeight: 900, color: "#111", lineHeight: 1.25, maxWidth: "100%" }}>{b.detail}</div>
+                      <div style={{ fontSize: 11, color: "#888", marginTop: 4 }}>{b.odds}</div>
+                      {b.note && <div style={{ fontSize: 11, color: "#888", fontStyle: "italic", marginTop: 12, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>💬 {b.note}</div>}
+                    </div>
+                    <div style={{ textAlign: "center", borderLeft: "1px solid #eee", borderRight: "1px solid #eee", padding: "0 10px" }}>
+                      <div style={{ fontSize: 9, color: "#888", fontWeight: 800, letterSpacing: 1, marginBottom: 4 }}>STAKE</div>
+                      <div style={{ fontSize: 22, fontWeight: 900, color: "#111" }}>${b.stake}</div>
+                    </div>
+                    <div style={{ textAlign: "right" }}>
+                      <div style={{ display: "inline-block", background: s.bg, color: s.text, fontSize: 9, fontWeight: 900, borderRadius: 999, padding: "5px 9px", marginBottom: 12 }}>
+                        {b.status === "PENDING" ? "⏳ PENDING" : b.status === "WON" ? "✅ WON" : "❌ LOST"}
+                      </div>
+                      <div style={{ fontSize: 9, color: "#888", fontWeight: 800, letterSpacing: 1, marginBottom: 4 }}>TO WIN</div>
+                      <div style={{ fontSize: 22, fontWeight: 900, color: "#3B82F6" }}>${b.toWin}</div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
       </div>
-    <AlleyKingsChat liveOdds={games} liveScores={scores} />
+      <AlleyKingsChat liveOdds={games} liveScores={scores} />
     </div>
   );
 }
