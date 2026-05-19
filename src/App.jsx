@@ -130,38 +130,48 @@ const ScoresBanner = ({ scores, games, activeSport, oddsLoading }) => {
   const hasGames = filteredGames.length > 0;
 
   if (oddsLoading) {
-  return (
-    <div style={{ background: "#0f0f0f", borderBottom: "1px solid #1e1e1e", padding: "12px 16px", display: "flex", alignItems: "center", gap: 8 }}>
-      <span style={{ background: "#E8192C", color: "white", fontSize: 8, fontWeight: 900, letterSpacing: 1.5, padding: "3px 8px", borderRadius: 4 }}>SCORES</span>
-      <span style={{ color: "#555", fontSize: 11, fontWeight: 700 }}>Loading scores & odds...</span>
-    </div>
-  );
-}
+    return (
+      <div style={{ background: "#F8F8F8", borderBottom: "1px solid #eee", display: "flex", alignItems: "center", overflowX: "auto", scrollbarWidth: "none" }}>
+        <div style={{ flexShrink: 0, display: "flex", alignItems: "center", padding: "0 12px 0 14px", height: 48, gap: 8 }}>
+          <span style={{ background: "#E8192C", color: "white", fontSize: 8, fontWeight: 900, letterSpacing: 1.5, padding: "3px 8px", borderRadius: 4 }}>LIVE</span>
+        </div>
+        <div style={{ width: 1, height: 28, background: "#e0e0e0", flexShrink: 0 }} />
+        {[1,2,3,4,5].map(i => (
+          <div key={i} style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: 10, padding: "8px 20px", borderRight: "1px solid #eee", height: 48, minWidth: 180 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 5, width: "100%" }}>
+              <div style={{ height: 9, background: "#e0e0e0", borderRadius: 4, width: "75%" }} />
+              <div style={{ height: 9, background: "#e0e0e0", borderRadius: 4, width: "55%" }} />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
 
-if (!hasScores && !hasGames) {
-  return (
-    <div style={{ background: "#0f0f0f", borderBottom: "1px solid #1e1e1e", padding: "12px 16px", display: "flex", alignItems: "center", gap: 8 }}>
-      <span style={{ background: "#333", color: "#666", fontSize: 8, fontWeight: 900, letterSpacing: 1.5, padding: "3px 8px", borderRadius: 4 }}>SCORES</span>
-      <span style={{ color: "#444", fontSize: 11, fontWeight: 700 }}>No games available right now</span>
-    </div>
-  );
-}
+  if (!hasScores && !hasGames) {
+    return (
+      <div style={{ background: "#F8F8F8", borderBottom: "1px solid #eee", padding: "10px 16px", display: "flex", alignItems: "center", gap: 8 }}>
+        <span style={{ background: "#eee", color: "#999", fontSize: 8, fontWeight: 900, letterSpacing: 1.5, padding: "3px 8px", borderRadius: 4 }}>SCORES</span>
+        <span style={{ color: "#999", fontSize: 11, fontWeight: 700 }}>No games available right now</span>
+      </div>
+    );
+  }
 
   return (
-    <div style={{ background: "#0f0f0f", borderBottom: "1px solid #1e1e1e" }}>
+    <div style={{ background: "#F8F8F8", borderBottom: "1px solid #eee" }}>
       {/* SCORES ROW */}
       {hasScores && (
-        <div style={{ borderBottom: hasGames ? "1px solid #1a1a1a" : "none" }}>
+        <div style={{ borderBottom: hasGames ? "1px solid #eee" : "none" }}>
           <div style={{ display: "flex", alignItems: "center", overflowX: "auto", scrollbarWidth: "none", msOverflowStyle: "none" }}
             className="banner-scroll">
             {/* Label pill */}
-            <div style={{ flexShrink: 0, display: "flex", alignItems: "center", padding: "0 12px 0 14px", height: 52 }}>
+            <div style={{ flexShrink: 0, display: "flex", alignItems: "center", padding: "0 12px 0 14px", height: 48 }}>
               <span style={{ background: "#E8192C", color: "white", fontSize: 8, fontWeight: 900, letterSpacing: 1.5, padding: "3px 8px", borderRadius: 4 }}>
                 FINAL
               </span>
             </div>
             {/* Divider */}
-            <div style={{ width: 1, height: 30, background: "#222", flexShrink: 0 }} />
+            <div style={{ width: 1, height: 28, background: "#e0e0e0", flexShrink: 0 }} />
             {/* Score cards */}
             {filteredScores.map((game, i) => {
               const cfg = game.sportConfig;
@@ -176,30 +186,28 @@ if (!hasScores && !hasGames) {
                   display: "flex",
                   alignItems: "center",
                   gap: 10,
-                  padding: "8px 16px",
-                  borderRight: "1px solid #1e1e1e",
-                  height: 52,
+                  padding: "8px 20px",
+                  borderRight: "1px solid #eee",
+                  height: 48,
                   minWidth: 200,
                 }}>
-                  {/* Sport emoji */}
                   <span style={{ fontSize: 12, flexShrink: 0 }}>{cfg.emoji}</span>
-                  {/* Teams + scores */}
                   <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                       <TeamLogo teamName={game.away_team} sport={cfg.espnSport} size={16} />
-                      <span style={{ color: !homeWon ? "white" : "#555", fontSize: 11, fontWeight: !homeWon ? 800 : 500, minWidth: 60 }}>
+                      <span style={{ color: !homeWon ? "#111" : "#bbb", fontSize: 11, fontWeight: !homeWon ? 800 : 500, minWidth: 60 }}>
                         {getTeamAbbr(game.away_team)}
                       </span>
-                      <span style={{ color: !homeWon ? "white" : "#555", fontSize: 13, fontWeight: 900, marginLeft: "auto" }}>
+                      <span style={{ color: !homeWon ? "#111" : "#bbb", fontSize: 13, fontWeight: 900, marginLeft: "auto" }}>
                         {away?.score ?? "—"}
                       </span>
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                       <TeamLogo teamName={game.home_team} sport={cfg.espnSport} size={16} />
-                      <span style={{ color: homeWon ? "white" : "#555", fontSize: 11, fontWeight: homeWon ? 800 : 500, minWidth: 60 }}>
+                      <span style={{ color: homeWon ? "#111" : "#bbb", fontSize: 11, fontWeight: homeWon ? 800 : 500, minWidth: 60 }}>
                         {getTeamAbbr(game.home_team)}
                       </span>
-                      <span style={{ color: homeWon ? "white" : "#555", fontSize: 13, fontWeight: 900, marginLeft: "auto" }}>
+                      <span style={{ color: homeWon ? "#111" : "#bbb", fontSize: 13, fontWeight: 900, marginLeft: "auto" }}>
                         {home?.score ?? "—"}
                       </span>
                     </div>
@@ -216,14 +224,12 @@ if (!hasScores && !hasGames) {
         <div style={{ display: "flex", alignItems: "center", overflowX: "auto", scrollbarWidth: "none", msOverflowStyle: "none" }}
           className="banner-scroll">
           {/* Label pill */}
-          <div style={{ flexShrink: 0, display: "flex", alignItems: "center", padding: "0 12px 0 14px", height: 52 }}>
-            <span style={{ background: "#1a3a1a", color: "#4ade80", fontSize: 8, fontWeight: 900, letterSpacing: 1.5, padding: "3px 8px", borderRadius: 4 }}>
+          <div style={{ flexShrink: 0, display: "flex", alignItems: "center", padding: "0 12px 0 14px", height: 48 }}>
+            <span style={{ background: "#dcfce7", color: "#16a34a", fontSize: 8, fontWeight: 900, letterSpacing: 1.5, padding: "3px 8px", borderRadius: 4 }}>
               ODDS
             </span>
           </div>
-          {/* Divider */}
-          <div style={{ width: 1, height: 30, background: "#222", flexShrink: 0 }} />
-          {/* Odds cards */}
+          <div style={{ width: 1, height: 28, background: "#e0e0e0", flexShrink: 0 }} />
           {filteredGames.map((game, i) => {
             const cfg = game.sportConfig;
             const bk = game.bookmakers?.[0];
@@ -241,37 +247,26 @@ if (!hasScores && !hasGames) {
                 display: "flex",
                 alignItems: "center",
                 gap: 10,
-                padding: "8px 16px",
-                borderRight: "1px solid #1e1e1e",
-                height: 52,
+                padding: "8px 20px",
+                borderRight: "1px solid #eee",
+                height: 48,
                 minWidth: 220,
               }}>
-                {/* Sport emoji */}
                 <span style={{ fontSize: 12, flexShrink: 0 }}>{cfg.emoji}</span>
-                {/* Teams + odds */}
                 <div style={{ display: "flex", flexDirection: "column", gap: 2, flex: 1 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                     <TeamLogo teamName={game.away_team} sport={cfg.espnSport} size={16} />
-                    <span style={{ color: "#ccc", fontSize: 11, fontWeight: 700, minWidth: 55 }}>{getTeamAbbr(game.away_team)}</span>
-                    <span style={{
-                      color: awayOdds > 0 ? "#4ade80" : "#f87171",
-                      fontSize: 11, fontWeight: 900, marginLeft: "auto"
-                    }}>{formatOdds(awayOdds)}</span>
+                    <span style={{ color: "#333", fontSize: 11, fontWeight: 700, minWidth: 55 }}>{getTeamAbbr(game.away_team)}</span>
+                    <span style={{ color: awayOdds > 0 ? "#16a34a" : "#dc2626", fontSize: 11, fontWeight: 900, marginLeft: "auto" }}>{formatOdds(awayOdds)}</span>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                     <TeamLogo teamName={game.home_team} sport={cfg.espnSport} size={16} />
-                    <span style={{ color: "#ccc", fontSize: 11, fontWeight: 700, minWidth: 55 }}>{getTeamAbbr(game.home_team)}</span>
-                    <span style={{
-                      color: homeOdds > 0 ? "#4ade80" : "#f87171",
-                      fontSize: 11, fontWeight: 900, marginLeft: "auto"
-                    }}>{formatOdds(homeOdds)}</span>
+                    <span style={{ color: "#333", fontSize: 11, fontWeight: 700, minWidth: 55 }}>{getTeamAbbr(game.home_team)}</span>
+                    <span style={{ color: homeOdds > 0 ? "#16a34a" : "#dc2626", fontSize: 11, fontWeight: 900, marginLeft: "auto" }}>{formatOdds(homeOdds)}</span>
                   </div>
                 </div>
-                {/* Time */}
                 <div style={{ flexShrink: 0, textAlign: "right" }}>
-                  <span style={{ color: "#444", fontSize: 9, fontWeight: 700 }}>
-                    {isToday ? timeStr : dateStr}
-                  </span>
+                  <span style={{ color: "#999", fontSize: 9, fontWeight: 700 }}>{isToday ? timeStr : dateStr}</span>
                 </div>
               </div>
             );
@@ -419,6 +414,7 @@ export default function AlleyKingsDashboard() {
         .odds-ticker-inner { display: inline-block; white-space: nowrap; animation: oddsticker 50s linear infinite; }
         @keyframes newsticker { 0% { transform: translateX(100vw); } 100% { transform: translateX(-100%); } }
         @keyframes oddsticker { 0% { transform: translateX(100vw); } 100% { transform: translateX(-100%); } }
+        @keyframes pulse { 0%, 100% { opacity: 0.3; } 50% { opacity: 0.7; } }
         .score-card { background: #111; border-radius: 12px; padding: 14px; flex-shrink: 0; min-width: 175px; }
         .upcoming-card { background: #111; border-radius: 12px; padding: 14px; flex-shrink: 0; min-width: 175px; }
         @media (max-width: 600px) {
