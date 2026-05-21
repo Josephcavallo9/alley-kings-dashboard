@@ -1,7 +1,7 @@
 import AlleyKingsChat from './AlleyKingsChat';
 import { useState, useEffect } from "react";
 import { supabase } from './supabase';
-const ODDS_API_KEY = process.env.REACT_APP_ODDS_API_KEY;
+
 
 const storyFilters = ["ALL", "BREAKING", "CULTURE", "TRADES", "SCORES", "VIRAL"];
 const clipFilters = ["ALL", "LIVE", "SCHEDULED", "DRAFTS"];
