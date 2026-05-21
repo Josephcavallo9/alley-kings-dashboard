@@ -304,41 +304,66 @@ export default function AlleyKingsDashboard() {
   }, []);
 
   useEffect(() => {
+    const ESPN_SPORT_MAP = [
+      { espnPath: "basketball/nba", sportConfig: SPORT_CONFIGS[0] },
+      { espnPath: "hockey/nhl", sportConfig: SPORT_CONFIGS[1] },
+      { espnPath: "football/nfl", sportConfig: SPORT_CONFIGS[2] },
+      { espnPath: "baseball/mlb", sportConfig: SPORT_CONFIGS[3] },
+      { espnPath: "soccer/eng.1", sportConfig: SPORT_CONFIGS[4] },
+    ];
+
     const fetchAllData = async () => {
       try {
         const allGames = [];
         const allScores = [];
-        const allOddsTicker = [];
-        for (const sport of SPORT_CONFIGS) {
+
+        for (const { espnPath, sportConfig } of ESPN_SPORT_MAP) {
           try {
-            const oddsRes = await fetch(`https://api.the-odds-api.com/v4/sports/${sport.key}/odds/?apiKey=${ODDS_API_KEY}&regions=us&markets=h2h&oddsFormat=american&dateFormat=iso`);
-            const oddsData = await oddsRes.json();
-            if (Array.isArray(oddsData)) {
-              oddsData.slice(0, 4).forEach(g => {
-                allGames.push({ ...g, sportConfig: sport });
-                const bk = g.bookmakers?.[0];
-                const mkt = bk?.markets?.find(m => m.key === "h2h");
-                const awayOdds = mkt?.outcomes?.find(o => o.name === g.away_team)?.price;
-                const homeOdds = mkt?.outcomes?.find(o => o.name === g.home_team)?.price;
-                if (awayOdds && homeOdds) {
-                  allOddsTicker.push(`${sport.emoji} ${getTeamAbbr(g.away_team)} ${formatOdds(awayOdds)} vs ${getTeamAbbr(g.home_team)} ${formatOdds(homeOdds)}`);
-                }
-              });
-            }
-          } catch (e) {}
-          try {
-            const scoresRes = await fetch(`https://api.the-odds-api.com/v4/sports/${sport.key}/scores/?apiKey=${ODDS_API_KEY}&daysFrom=1`);
-            const scoresData = await scoresRes.json();
-            if (Array.isArray(scoresData)) {
-              scoresData.filter(g => g.completed).slice(0, 3).forEach(g => {
-                allScores.push({ ...g, sportConfig: sport });
-              });
-            }
-          } catch (e) {}
+            const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/${espnPath}/scoreboard`);
+            const data = await res.json();
+            const events = data.events || [];
+
+            events.slice(0, 6).forEach(event => {
+              const competition = event.competitions?.[0];
+              if (!competition) return;
+              const home = competition.competitors?.find(c => c.homeAway === "home");
+              const away = competition.competitors?.find(c => c.homeAway === "away");
+              const status = competition.status?.type;
+              const isCompleted = status?.completed === true;
+              const isInProgress = status?.state === "in";
+
+              const gameObj = {
+                id: event.id,
+                home_team: home?.team?.displayName,
+                away_team: away?.team?.displayName,
+                home_abbr: home?.team?.abbreviation,
+                away_abbr: away?.team?.abbreviation,
+                home_logo: home?.team?.logo,
+                away_logo: away?.team?.logo,
+                home_score: home?.score,
+                away_score: away?.score,
+                commence_time: event.date,
+                status_detail: status?.detail,
+                status_short: status?.shortDetail,
+                is_completed: isCompleted,
+                is_live: isInProgress,
+                sportConfig,
+              };
+
+              if (isCompleted) {
+                allScores.push(gameObj);
+              } else {
+                allGames.push(gameObj);
+              }
+            });
+          } catch (e) {
+            console.error(`ESPN fetch failed for ${espnPath}:`, e);
+          }
         }
+
         setGames(allGames);
         setScores(allScores);
-        setOddsTicker(allOddsTicker);
+        setOddsTicker([]);
       } catch (err) {
         console.error("Data fetch error:", err);
       } finally {
@@ -379,7 +404,11 @@ export default function AlleyKingsDashboard() {
   const filteredBets = betFilter === "ALL" ? dbBets : ["PENDING", "WON", "LOST"].includes(betFilter) ? dbBets.filter(b => b.status === betFilter) : dbBets.filter(b => b.bettor === betFilter);
 
   const newsTickerString = tickerHeadlines.join("     •     ");
-  const oddsTickerString = oddsTicker.length > 0 ? oddsTicker.join("          |          ") : "Loading odds...";
+  const oddsTickerString = scores.length > 0
+    ? scores.map(g => `${g.sportConfig.emoji} ${g.away_abbr || getTeamAbbr(g.away_team)} ${g.away_score} - ${g.home_score} ${g.home_abbr || getTeamAbbr(g.home_team)}`).join("          |          ")
+    : games.length > 0
+    ? games.map(g => `${g.sportConfig.emoji} ${g.away_abbr || getTeamAbbr(g.away_team)} vs ${g.home_abbr || getTeamAbbr(g.home_team)} ${new Date(g.commence_time).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`).join("          |          ")
+    : "Loading scores...";
 
   return (
     <div style={{ fontFamily: "'Barlow Condensed', 'Arial Narrow', sans-serif", background: "#0A0A0A", minHeight: "100vh", maxWidth: "100%", margin: "0 auto" }}>
@@ -479,7 +508,7 @@ export default function AlleyKingsDashboard() {
             <span style={{ color: "#E8192C", fontWeight: 900, fontSize: 13 }}>KINGS</span>
           </div>
           <span style={{ color: "white", fontWeight: 800, fontSize: 14, letterSpacing: 2, flex: 1 }}>SCOREBOARD</span>
-          <span style={{ color: "#555", fontSize: 10, fontWeight: 700 }}>{oddsLoading ? "Loading..." : `${scores.length} FINALS`}</span>
+          <span style={{ color: "#555", fontSize: 10, fontWeight: 700 }}>{oddsLoading ? "Loading..." : `${scores.length} FINAL${scores.length !== 1 ? "S" : ""} · ${games.length} UPCOMING`}</span>
         </div>
 
         {/* Sport Filter Tabs */}
@@ -499,10 +528,8 @@ export default function AlleyKingsDashboard() {
             <div style={{ display: "flex", gap: 10, overflowX: "auto", paddingBottom: 4 }}>
               {filteredScores.map((game, i) => {
                 const cfg = game.sportConfig;
-                const home = game.scores?.find(s => s.name === game.home_team);
-                const away = game.scores?.find(s => s.name === game.away_team);
-                const homeScore = parseInt(home?.score || 0);
-                const awayScore = parseInt(away?.score || 0);
+                const homeScore = parseInt(game.home_score || 0);
+                const awayScore = parseInt(game.away_score || 0);
                 const homeWon = homeScore > awayScore;
                 const gameDate = new Date(game.commence_time);
                 const dateStr = gameDate.toLocaleDateString("en-US", { month: "short", day: "numeric" });
@@ -514,17 +541,17 @@ export default function AlleyKingsDashboard() {
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <TeamLogo teamName={game.home_team} sport={cfg.espnSport} size={28} />
-                        <span style={{ color: homeWon ? "white" : "#555", fontSize: 13, fontWeight: homeWon ? 800 : 500 }}>{game.home_team?.split(" ").slice(-1)[0]}</span>
+                        {game.home_logo ? <img src={game.home_logo} alt={game.home_team} style={{ width: 28, height: 28, objectFit: "contain" }} /> : <TeamLogo teamName={game.home_team} sport={cfg.espnSport} size={28} />}
+                        <span style={{ color: homeWon ? "white" : "#555", fontSize: 13, fontWeight: homeWon ? 800 : 500 }}>{game.home_abbr || game.home_team?.split(" ").slice(-1)[0]}</span>
                       </div>
-                      <span style={{ color: homeWon ? "white" : "#555", fontSize: 22, fontWeight: 900 }}>{home?.score || "—"}</span>
+                      <span style={{ color: homeWon ? "white" : "#555", fontSize: 22, fontWeight: 900 }}>{game.home_score || "—"}</span>
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <TeamLogo teamName={game.away_team} sport={cfg.espnSport} size={28} />
-                        <span style={{ color: !homeWon ? "white" : "#555", fontSize: 13, fontWeight: !homeWon ? 800 : 500 }}>{game.away_team?.split(" ").slice(-1)[0]}</span>
+                        {game.away_logo ? <img src={game.away_logo} alt={game.away_team} style={{ width: 28, height: 28, objectFit: "contain" }} /> : <TeamLogo teamName={game.away_team} sport={cfg.espnSport} size={28} />}
+                        <span style={{ color: !homeWon ? "white" : "#555", fontSize: 13, fontWeight: !homeWon ? 800 : 500 }}>{game.away_abbr || game.away_team?.split(" ").slice(-1)[0]}</span>
                       </div>
-                      <span style={{ color: !homeWon ? "white" : "#555", fontSize: 22, fontWeight: 900 }}>{away?.score || "—"}</span>
+                      <span style={{ color: !homeWon ? "white" : "#555", fontSize: 22, fontWeight: 900 }}>{game.away_score || "—"}</span>
                     </div>
                   </div>
                 );
@@ -539,33 +566,30 @@ export default function AlleyKingsDashboard() {
             <div style={{ display: "flex", gap: 10, overflowX: "auto", paddingBottom: 4 }}>
               {filteredGames.map((game, i) => {
                 const cfg = game.sportConfig;
-                const bk = game.bookmakers?.[0];
-                const mkt = bk?.markets?.find(m => m.key === "h2h");
-                const homeOdds = mkt?.outcomes?.find(o => o.name === game.home_team)?.price;
-                const awayOdds = mkt?.outcomes?.find(o => o.name === game.away_team)?.price;
                 const gameDate = new Date(game.commence_time);
                 const isToday = gameDate.toDateString() === new Date().toDateString();
                 const timeStr = gameDate.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
                 const dateStr = gameDate.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+                const statusLabel = game.is_live ? `🔴 ${game.status_short || "LIVE"}` : isToday ? `🕐 ${timeStr}` : dateStr;
                 return (
-                  <div key={i} className="upcoming-card" style={{ borderTop: `2px solid ${cfg.color}` }}>
+                  <div key={i} className="upcoming-card" style={{ borderTop: `2px solid ${game.is_live ? "#E8192C" : cfg.color}` }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-                      <span style={{ color: cfg.color, fontSize: 9, fontWeight: 800, letterSpacing: 1 }}>{cfg.emoji} {cfg.label}</span>
-                      <span style={{ color: "#555", fontSize: 9 }}>{isToday ? `🕐 ${timeStr}` : dateStr}</span>
+                      <span style={{ color: game.is_live ? "#E8192C" : cfg.color, fontSize: 9, fontWeight: 800, letterSpacing: 1 }}>{cfg.emoji} {cfg.label}</span>
+                      <span style={{ color: game.is_live ? "#E8192C" : "#555", fontSize: 9, fontWeight: game.is_live ? 800 : 400 }}>{statusLabel}</span>
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <TeamLogo teamName={game.away_team} sport={cfg.espnSport} size={28} />
-                        <span style={{ color: "white", fontSize: 13, fontWeight: 700 }}>{game.away_team?.split(" ").slice(-1)[0]}</span>
+                        {game.away_logo ? <img src={game.away_logo} alt={game.away_team} style={{ width: 28, height: 28, objectFit: "contain" }} /> : <TeamLogo teamName={game.away_team} sport={cfg.espnSport} size={28} />}
+                        <span style={{ color: "white", fontSize: 13, fontWeight: 700 }}>{game.away_abbr || game.away_team?.split(" ").slice(-1)[0]}</span>
                       </div>
-                      <span style={{ color: cfg.color, fontSize: 12, fontWeight: 800 }}>{formatOdds(awayOdds)}</span>
+                      <span style={{ color: game.is_live ? "white" : cfg.color, fontSize: game.is_live ? 18 : 11, fontWeight: 800 }}>{game.is_live ? (game.away_score || "0") : "—"}</span>
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <TeamLogo teamName={game.home_team} sport={cfg.espnSport} size={28} />
-                        <span style={{ color: "white", fontSize: 13, fontWeight: 700 }}>{game.home_team?.split(" ").slice(-1)[0]}</span>
+                        {game.home_logo ? <img src={game.home_logo} alt={game.home_team} style={{ width: 28, height: 28, objectFit: "contain" }} /> : <TeamLogo teamName={game.home_team} sport={cfg.espnSport} size={28} />}
+                        <span style={{ color: "white", fontSize: 13, fontWeight: 700 }}>{game.home_abbr || game.home_team?.split(" ").slice(-1)[0]}</span>
                       </div>
-                      <span style={{ color: cfg.color, fontSize: 12, fontWeight: 800 }}>{formatOdds(homeOdds)}</span>
+                      <span style={{ color: game.is_live ? "white" : cfg.color, fontSize: game.is_live ? 18 : 11, fontWeight: 800 }}>{game.is_live ? (game.home_score || "0") : "—"}</span>
                     </div>
                   </div>
                 );
