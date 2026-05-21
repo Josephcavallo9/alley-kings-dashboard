@@ -635,14 +635,6 @@ export default function AlleyKingsDashboard() {
           ))}
         </div>
 
-        {/* ── SCORES + ODDS BANNER (below tabs, above all content) ── */}
-        <ScoresBanner
-          scores={scores}
-          games={games}
-          activeSport={activeSport}
-          oddsLoading={oddsLoading}
-        />
-
         {/* ── TAB CONTENT ── */}
         {activeTab === "BRIEFING" && (
           <div>
