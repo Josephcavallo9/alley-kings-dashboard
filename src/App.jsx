@@ -1,7 +1,7 @@
 import AlleyKingsChat from './AlleyKingsChat';
 import { useState, useEffect } from "react";
 import { supabase } from './supabase';
-const ODDS_API_KEY = process.env.REACT_APP_ODDS_API_KEY;
+
 
 const storyFilters = ["ALL", "BREAKING", "CULTURE", "TRADES", "SCORES", "VIRAL"];
 const clipFilters = ["ALL", "LIVE", "SCHEDULED", "DRAFTS"];
@@ -81,7 +81,7 @@ const getESPNLogo = (teamName, sport) => {
   return `https://a.espncdn.com/i/teamlogos/${sport}/500/scoreboard/${abbr}.png`;
 };
 
-const formatOdds = (price) => {
+
   if (!price) return "—";
   return price > 0 ? `+${price}` : `${price}`;
 };
