@@ -81,7 +81,7 @@ const getESPNLogo = (teamName, sport) => {
   return `https://a.espncdn.com/i/teamlogos/${sport}/500/scoreboard/${abbr}.png`;
 };
 
-const formatOdds = (price) => {
+// formatOdds removed
   if (!price) return "—";
   return price > 0 ? `+${price}` : `${price}`;
 };
