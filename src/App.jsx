@@ -363,7 +363,7 @@ export default function AlleyKingsDashboard() {
 
         setGames(allGames);
         setScores(allScores);
-        setOddsTicker([]);
+        // setOddsTicker removed
       } catch (err) {
         console.error("Data fetch error:", err);
       } finally {
