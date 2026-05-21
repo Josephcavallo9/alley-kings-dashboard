@@ -1,7 +1,7 @@
 import AlleyKingsChat from './AlleyKingsChat';
 import { useState, useEffect } from "react";
 import { supabase } from './supabase';
-
+const ODDS_API_KEY = process.env.REACT_APP_ODDS_API_KEY;
 
 const storyFilters = ["ALL", "BREAKING", "CULTURE", "TRADES", "SCORES", "VIRAL"];
 const clipFilters = ["ALL", "LIVE", "SCHEDULED", "DRAFTS"];
@@ -119,46 +119,6 @@ const TeamLogo = ({ teamName, sport, size = 32 }) => {
     );
   }
   return <img src={logoUrl} alt={teamName} onError={() => setImgError(true)} style={{ width: size, height: size, objectFit: "contain", flexShrink: 0 }} />;
-};
-
-// ─── SCORES BANNER ────────────────────────────────────────────────────────────
-            const timeStr = gameDate.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
-            const dateStr = gameDate.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-
-            return (
-              <div key={i} style={{
-                flexShrink: 0,
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                padding: "8px 20px",
-                borderRight: "1px solid #eee",
-                height: 48,
-                minWidth: 220,
-              }}>
-                <span style={{ fontSize: 12, flexShrink: 0 }}>{cfg.emoji}</span>
-                <div style={{ display: "flex", flexDirection: "column", gap: 2, flex: 1 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <TeamLogo teamName={game.away_team} sport={cfg.espnSport} size={16} />
-                    <span style={{ color: "#333", fontSize: 11, fontWeight: 700, minWidth: 55 }}>{getTeamAbbr(game.away_team)}</span>
-                    <span style={{ color: awayOdds > 0 ? "#16a34a" : "#dc2626", fontSize: 11, fontWeight: 900, marginLeft: "auto" }}>{formatOdds(awayOdds)}</span>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <TeamLogo teamName={game.home_team} sport={cfg.espnSport} size={16} />
-                    <span style={{ color: "#333", fontSize: 11, fontWeight: 700, minWidth: 55 }}>{getTeamAbbr(game.home_team)}</span>
-                    <span style={{ color: homeOdds > 0 ? "#16a34a" : "#dc2626", fontSize: 11, fontWeight: 900, marginLeft: "auto" }}>{formatOdds(homeOdds)}</span>
-                  </div>
-                </div>
-                <div style={{ flexShrink: 0, textAlign: "right" }}>
-                  <span style={{ color: "#999", fontSize: 9, fontWeight: 700 }}>{isToday ? timeStr : dateStr}</span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
 };
 
 export default function AlleyKingsDashboard() {
@@ -514,6 +474,7 @@ export default function AlleyKingsDashboard() {
         </div>
 
         {/* ── SCORES + ODDS BANNER (below tabs, above all content) ── */}
+        <ScoresBanner
           scores={scores}
           games={games}
           activeSport={activeSport}
