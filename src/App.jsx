@@ -1,7 +1,7 @@
 import AlleyKingsChat from './AlleyKingsChat';
 import { useState, useEffect } from "react";
 import { supabase } from './supabase';
-
+const ODDS_API_KEY = process.env.REACT_APP_ODDS_API_KEY;
 
 const storyFilters = ["ALL", "BREAKING", "CULTURE", "TRADES", "SCORES", "VIRAL"];
 const clipFilters = ["ALL", "LIVE", "SCHEDULED", "DRAFTS"];
@@ -81,6 +81,11 @@ const getESPNLogo = (teamName, sport) => {
   return `https://a.espncdn.com/i/teamlogos/${sport}/500/scoreboard/${abbr}.png`;
 };
 
+const formatOdds = (price) => {
+  if (!price) return "—";
+  return price > 0 ? `+${price}` : `${price}`;
+};
+
 const getTeamAbbr = (name) => {
   if (!name) return "—";
   return name.split(" ").slice(-1)[0].slice(0, 3).toUpperCase();
@@ -116,6 +121,161 @@ const TeamLogo = ({ teamName, sport, size = 32 }) => {
   return <img src={logoUrl} alt={teamName} onError={() => setImgError(true)} style={{ width: size, height: size, objectFit: "contain", flexShrink: 0 }} />;
 };
 
+// ─── SCORES BANNER ────────────────────────────────────────────────────────────
+const ScoresBanner = ({ scores, games, activeSport, oddsLoading }) => {
+  const filteredScores = activeSport === "ALL" ? scores : scores.filter(g => g.sportConfig.label === activeSport);
+  const filteredGames = activeSport === "ALL" ? games : games.filter(g => g.sportConfig.label === activeSport);
+
+  const hasScores = filteredScores.length > 0;
+  const hasGames = filteredGames.length > 0;
+
+  if (oddsLoading) {
+    return (
+      <div style={{ background: "#F8F8F8", borderBottom: "1px solid #eee", display: "flex", alignItems: "center", overflowX: "auto", scrollbarWidth: "none" }}>
+        <div style={{ flexShrink: 0, display: "flex", alignItems: "center", padding: "0 12px 0 14px", height: 48, gap: 8 }}>
+          <span style={{ background: "#E8192C", color: "white", fontSize: 8, fontWeight: 900, letterSpacing: 1.5, padding: "3px 8px", borderRadius: 4 }}>LIVE</span>
+        </div>
+        <div style={{ width: 1, height: 28, background: "#e0e0e0", flexShrink: 0 }} />
+        {[1,2,3,4,5].map(i => (
+          <div key={i} style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: 10, padding: "8px 20px", borderRight: "1px solid #eee", height: 48, minWidth: 180 }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 5, width: "100%" }}>
+              <div style={{ height: 9, background: "#e0e0e0", borderRadius: 4, width: "75%" }} />
+              <div style={{ height: 9, background: "#e0e0e0", borderRadius: 4, width: "55%" }} />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (!hasScores && !hasGames) {
+    return (
+      <div style={{ background: "#F8F8F8", borderBottom: "1px solid #eee", padding: "10px 16px", display: "flex", alignItems: "center", gap: 8 }}>
+        <span style={{ background: "#eee", color: "#999", fontSize: 8, fontWeight: 900, letterSpacing: 1.5, padding: "3px 8px", borderRadius: 4 }}>SCORES</span>
+        <span style={{ color: "#999", fontSize: 11, fontWeight: 700 }}>No games available right now</span>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ background: "#F8F8F8", borderBottom: "1px solid #eee" }}>
+      {/* SCORES ROW */}
+      {hasScores && (
+        <div style={{ borderBottom: hasGames ? "1px solid #eee" : "none" }}>
+          <div style={{ display: "flex", alignItems: "center", overflowX: "auto", scrollbarWidth: "none", msOverflowStyle: "none" }}
+            className="banner-scroll">
+            {/* Label pill */}
+            <div style={{ flexShrink: 0, display: "flex", alignItems: "center", padding: "0 12px 0 14px", height: 48 }}>
+              <span style={{ background: "#E8192C", color: "white", fontSize: 8, fontWeight: 900, letterSpacing: 1.5, padding: "3px 8px", borderRadius: 4 }}>
+                FINAL
+              </span>
+            </div>
+            {/* Divider */}
+            <div style={{ width: 1, height: 28, background: "#e0e0e0", flexShrink: 0 }} />
+            {/* Score cards */}
+            {filteredScores.map((game, i) => {
+              const cfg = game.sportConfig;
+              const home = game.scores?.find(s => s.name === game.home_team);
+              const away = game.scores?.find(s => s.name === game.away_team);
+              const homeScore = parseInt(home?.score || 0);
+              const awayScore = parseInt(away?.score || 0);
+              const homeWon = homeScore > awayScore;
+              return (
+                <div key={i} style={{
+                  flexShrink: 0,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  padding: "8px 20px",
+                  borderRight: "1px solid #eee",
+                  height: 48,
+                  minWidth: 200,
+                }}>
+                  <span style={{ fontSize: 12, flexShrink: 0 }}>{cfg.emoji}</span>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <TeamLogo teamName={game.away_team} sport={cfg.espnSport} size={16} />
+                      <span style={{ color: !homeWon ? "#111" : "#bbb", fontSize: 11, fontWeight: !homeWon ? 800 : 500, minWidth: 60 }}>
+                        {getTeamAbbr(game.away_team)}
+                      </span>
+                      <span style={{ color: !homeWon ? "#111" : "#bbb", fontSize: 13, fontWeight: 900, marginLeft: "auto" }}>
+                        {away?.score ?? "—"}
+                      </span>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <TeamLogo teamName={game.home_team} sport={cfg.espnSport} size={16} />
+                      <span style={{ color: homeWon ? "#111" : "#bbb", fontSize: 11, fontWeight: homeWon ? 800 : 500, minWidth: 60 }}>
+                        {getTeamAbbr(game.home_team)}
+                      </span>
+                      <span style={{ color: homeWon ? "#111" : "#bbb", fontSize: 13, fontWeight: 900, marginLeft: "auto" }}>
+                        {home?.score ?? "—"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ODDS ROW */}
+      {hasGames && (
+        <div style={{ display: "flex", alignItems: "center", overflowX: "auto", scrollbarWidth: "none", msOverflowStyle: "none" }}
+          className="banner-scroll">
+          {/* Label pill */}
+          <div style={{ flexShrink: 0, display: "flex", alignItems: "center", padding: "0 12px 0 14px", height: 48 }}>
+            <span style={{ background: "#dcfce7", color: "#16a34a", fontSize: 8, fontWeight: 900, letterSpacing: 1.5, padding: "3px 8px", borderRadius: 4 }}>
+              ODDS
+            </span>
+          </div>
+          <div style={{ width: 1, height: 28, background: "#e0e0e0", flexShrink: 0 }} />
+          {filteredGames.map((game, i) => {
+            const cfg = game.sportConfig;
+            const bk = game.bookmakers?.[0];
+            const mkt = bk?.markets?.find(m => m.key === "h2h");
+            const homeOdds = mkt?.outcomes?.find(o => o.name === game.home_team)?.price;
+            const awayOdds = mkt?.outcomes?.find(o => o.name === game.away_team)?.price;
+            const gameDate = new Date(game.commence_time);
+            const isToday = gameDate.toDateString() === new Date().toDateString();
+            const timeStr = gameDate.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+            const dateStr = gameDate.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+
+            return (
+              <div key={i} style={{
+                flexShrink: 0,
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                padding: "8px 20px",
+                borderRight: "1px solid #eee",
+                height: 48,
+                minWidth: 220,
+              }}>
+                <span style={{ fontSize: 12, flexShrink: 0 }}>{cfg.emoji}</span>
+                <div style={{ display: "flex", flexDirection: "column", gap: 2, flex: 1 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <TeamLogo teamName={game.away_team} sport={cfg.espnSport} size={16} />
+                    <span style={{ color: "#333", fontSize: 11, fontWeight: 700, minWidth: 55 }}>{getTeamAbbr(game.away_team)}</span>
+                    <span style={{ color: awayOdds > 0 ? "#16a34a" : "#dc2626", fontSize: 11, fontWeight: 900, marginLeft: "auto" }}>{formatOdds(awayOdds)}</span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <TeamLogo teamName={game.home_team} sport={cfg.espnSport} size={16} />
+                    <span style={{ color: "#333", fontSize: 11, fontWeight: 700, minWidth: 55 }}>{getTeamAbbr(game.home_team)}</span>
+                    <span style={{ color: homeOdds > 0 ? "#16a34a" : "#dc2626", fontSize: 11, fontWeight: 900, marginLeft: "auto" }}>{formatOdds(homeOdds)}</span>
+                  </div>
+                </div>
+                <div style={{ flexShrink: 0, textAlign: "right" }}>
+                  <span style={{ color: "#999", fontSize: 9, fontWeight: 700 }}>{isToday ? timeStr : dateStr}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
 
 export default function AlleyKingsDashboard() {
   const [activeTab, setActiveTab] = useState("BRIEFING");
@@ -128,8 +288,6 @@ export default function AlleyKingsDashboard() {
   const [articles, setArticles] = useState([]);
   const [games, setGames] = useState([]);
   const [scores, setScores] = useState([]);
-  // odds ticker removed
-  const [tickerHeadlines, setTickerHeadlines] = useState(["Loading latest sports news..."]);
   const [loading, setLoading] = useState(true);
   const [oddsLoading, setOddsLoading] = useState(true);
 
@@ -145,11 +303,11 @@ export default function AlleyKingsDashboard() {
 
   useEffect(() => {
     const ESPN_SPORT_MAP = [
-      { espnPath: "basketball/nba", sportConfig: SPORT_CONFIGS[0] },
-      { espnPath: "hockey/nhl", sportConfig: SPORT_CONFIGS[1] },
-      { espnPath: "football/nfl", sportConfig: SPORT_CONFIGS[2] },
-      { espnPath: "baseball/mlb", sportConfig: SPORT_CONFIGS[3] },
-      { espnPath: "soccer/eng.1", sportConfig: SPORT_CONFIGS[4] },
+      { espnPath: "basketball/nba", sportConfig: SPORT_CONFIGS[0], priority: 1 },
+      { espnPath: "hockey/nhl", sportConfig: SPORT_CONFIGS[1], priority: 1 },
+      { espnPath: "baseball/mlb", sportConfig: SPORT_CONFIGS[3], priority: 2 },
+      { espnPath: "soccer/eng.1", sportConfig: SPORT_CONFIGS[4], priority: 3 },
+      { espnPath: "football/nfl", sportConfig: SPORT_CONFIGS[2], priority: 4 },
     ];
 
     const fetchAllData = async () => {
@@ -157,20 +315,22 @@ export default function AlleyKingsDashboard() {
         const allGames = [];
         const allScores = [];
 
-        for (const { espnPath, sportConfig } of ESPN_SPORT_MAP) {
+        for (const { espnPath, sportConfig, priority } of ESPN_SPORT_MAP) {
           try {
             const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/${espnPath}/scoreboard`);
             const data = await res.json();
             const events = data.events || [];
 
-            events.slice(0, 6).forEach(event => {
+            events.slice(0, 8).forEach(event => {
               const competition = event.competitions?.[0];
               if (!competition) return;
               const home = competition.competitors?.find(c => c.homeAway === "home");
               const away = competition.competitors?.find(c => c.homeAway === "away");
-              const status = competition.status?.type;
-              const isCompleted = status?.completed === true;
-              const isInProgress = status?.state === "in";
+              const statusType = competition.status?.type;
+              const statusState = statusType?.state || statusType?.name || "";
+              const isCompleted = statusType?.completed === true || statusState === "post" || statusState === "STATUS_FINAL";
+              const isInProgress = statusState === "in" || statusState === "STATUS_IN_PROGRESS";
+              const isPlayoff = event.season?.type === 3 || (event.name || "").toLowerCase().includes("playoff") || (event.name || "").toLowerCase().includes("final");
 
               const gameObj = {
                 id: event.id,
@@ -183,10 +343,12 @@ export default function AlleyKingsDashboard() {
                 home_score: home?.score,
                 away_score: away?.score,
                 commence_time: event.date,
-                status_detail: status?.detail,
-                status_short: status?.shortDetail,
+                status_detail: statusType?.detail,
+                status_short: statusType?.shortDetail,
                 is_completed: isCompleted,
                 is_live: isInProgress,
+                is_playoff: isPlayoff,
+                priority,
                 sportConfig,
               };
 
@@ -201,9 +363,23 @@ export default function AlleyKingsDashboard() {
           }
         }
 
+        // Playoffs first, then sport priority, then date
+        allScores.sort((a, b) => {
+          if (a.is_playoff !== b.is_playoff) return a.is_playoff ? -1 : 1;
+          if (a.priority !== b.priority) return a.priority - b.priority;
+          return new Date(b.commence_time) - new Date(a.commence_time);
+        });
+
+        // Live first, then playoffs, then sport priority, then date
+        allGames.sort((a, b) => {
+          if (a.is_live !== b.is_live) return a.is_live ? -1 : 1;
+          if (a.is_playoff !== b.is_playoff) return a.is_playoff ? -1 : 1;
+          if (a.priority !== b.priority) return a.priority - b.priority;
+          return new Date(a.commence_time) - new Date(b.commence_time);
+        });
+
         setGames(allGames);
         setScores(allScores);
-        // setOddsTicker removed
       } catch (err) {
         console.error("Data fetch error:", err);
       } finally {
@@ -212,6 +388,8 @@ export default function AlleyKingsDashboard() {
     };
     fetchAllData();
   }, []);
+
+
 
   useEffect(() => {
     const fetchNews = async () => {
@@ -226,7 +404,6 @@ export default function AlleyKingsDashboard() {
             publishedAt: a.pubDate,
           }));
           setArticles(filtered);
-          setTickerHeadlines(filtered.slice(0, 8).map(a => `📰 ${a.title}`));
         }
       } catch (err) {
         console.error("News fetch error:", err);
@@ -242,13 +419,6 @@ export default function AlleyKingsDashboard() {
   const filteredArticles = storyFilter === "ALL" ? articles : articles.filter(a => categorizeArticle(a).type === storyFilter);
   const filteredClips = clipFilter === "ALL" ? dbClips : dbClips.filter(c => clipFilter === "DRAFTS" ? c.status === "DRAFT" : c.status === clipFilter);
   const filteredBets = betFilter === "ALL" ? dbBets : ["PENDING", "WON", "LOST"].includes(betFilter) ? dbBets.filter(b => b.status === betFilter) : dbBets.filter(b => b.bettor === betFilter);
-
-  const newsTickerString = tickerHeadlines.join("     •     ");
-  const oddsTickerString = scores.length > 0
-    ? scores.map(g => `${g.sportConfig.emoji} ${g.away_abbr || getTeamAbbr(g.away_team)} ${g.away_score} - ${g.home_score} ${g.home_abbr || getTeamAbbr(g.home_team)}`).join("          |          ")
-    : games.length > 0
-    ? games.map(g => `${g.sportConfig.emoji} ${g.away_abbr || getTeamAbbr(g.away_team)} vs ${g.home_abbr || getTeamAbbr(g.home_team)} ${new Date(g.commence_time).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`).join("          |          ")
-    : "Loading scores...";
 
   return (
     <div style={{ fontFamily: "'Barlow Condensed', 'Arial Narrow', sans-serif", background: "#0A0A0A", minHeight: "100vh", maxWidth: "100%", margin: "0 auto" }}>
@@ -331,15 +501,6 @@ export default function AlleyKingsDashboard() {
         }
       `}</style>
 
-      {/* ── TOP ODDS TICKER ── */}
-      <div className="odds-ticker">
-        <div className="odds-ticker-inner">
-          <span style={{ color: "#666", fontSize: 10, fontWeight: 700, letterSpacing: 0.5, paddingRight: 40 }}>
-            {oddsTickerString} &nbsp;&nbsp;&nbsp; {oddsTickerString}
-          </span>
-        </div>
-      </div>
-
       {/* ── SCOREBOARD HEADER ── */}
       <div style={{ background: "#0D0D0D", padding: "12px 24px 14px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
@@ -376,7 +537,9 @@ export default function AlleyKingsDashboard() {
                 return (
                   <div key={i} className="score-card" style={{ borderTop: `2px solid ${cfg.color}` }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-                      <span style={{ color: cfg.color, fontSize: 9, fontWeight: 800, letterSpacing: 1 }}>{cfg.emoji} {cfg.label} • FINAL</span>
+                      <span style={{ color: cfg.color, fontSize: 9, fontWeight: 800, letterSpacing: 1 }}>
+                        {cfg.emoji} {cfg.label} • {game.is_playoff ? "🏆 PLAYOFFS" : "FINAL"}
+                      </span>
                       <span style={{ color: "#444", fontSize: 9 }}>{dateStr}</span>
                     </div>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
@@ -439,15 +602,6 @@ export default function AlleyKingsDashboard() {
         )}
       </div>
 
-      {/* ── NEWS TICKER ── */}
-      <div className="news-ticker">
-        <div className="news-ticker-inner">
-          <span style={{ color: "white", fontSize: 11, fontWeight: 700, paddingRight: 60 }}>
-            {newsTickerString} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {newsTickerString}
-          </span>
-        </div>
-      </div>
-
       {/* ── WHITE CONTENT AREA ── */}
       <div style={{ background: "white", borderRadius: "20px 20px 0 0" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "20px 16px 16px" }}>
@@ -474,6 +628,14 @@ export default function AlleyKingsDashboard() {
             <div key={t.key} className={`tab ${activeTab === t.key ? "active" : ""}`} onClick={() => setActiveTab(t.key)}>{t.label}</div>
           ))}
         </div>
+
+        {/* ── SCORES + ODDS BANNER (below tabs, above all content) ── */}
+        <ScoresBanner
+          scores={scores}
+          games={games}
+          activeSport={activeSport}
+          oddsLoading={oddsLoading}
+        />
 
         {/* ── TAB CONTENT ── */}
         {activeTab === "BRIEFING" && (
