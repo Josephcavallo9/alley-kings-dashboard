@@ -700,7 +700,7 @@ export default function AlleyKingsDashboard() {
           </div>
         )}
       </div>
-      <AlleyKingsChat  />
+      {/* <AlleyKingsChat /> */}
     </div>
   );
 }
