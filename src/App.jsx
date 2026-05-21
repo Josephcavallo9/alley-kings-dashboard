@@ -1,6 +1,7 @@
+import AlleyKingsChat from './AlleyKingsChat';
 import { useState, useEffect } from "react";
 import { supabase } from './supabase';
-
+const ODDS_API_KEY = process.env.REACT_APP_ODDS_API_KEY;
 
 const storyFilters = ["ALL", "BREAKING", "CULTURE", "TRADES", "SCORES", "VIRAL"];
 const clipFilters = ["ALL", "LIVE", "SCHEDULED", "DRAFTS"];
@@ -78,6 +79,11 @@ const getESPNLogo = (teamName, sport) => {
   else if (sport === "nfl") abbr = nflMap[teamName];
   if (!abbr) return null;
   return `https://a.espncdn.com/i/teamlogos/${sport}/500/scoreboard/${abbr}.png`;
+};
+
+const formatOdds = (price) => {
+  if (!price) return "—";
+  return price > 0 ? `+${price}` : `${price}`;
 };
 
 const getTeamAbbr = (name) => {
@@ -468,6 +474,7 @@ export default function AlleyKingsDashboard() {
         </div>
 
         {/* ── SCORES + ODDS BANNER (below tabs, above all content) ── */}
+        <ScoresBanner
           scores={scores}
           games={games}
           activeSport={activeSport}
@@ -699,7 +706,7 @@ export default function AlleyKingsDashboard() {
           </div>
         )}
       </div>
-      {/* <AlleyKingsChat /> */}
+      <AlleyKingsChat liveOdds={games} liveScores={scores} />
     </div>
   );
 }
