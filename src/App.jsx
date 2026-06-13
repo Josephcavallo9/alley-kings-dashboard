@@ -563,20 +563,6 @@ export default function AlleyKingsDashboard() {
 
         {activeTab === "CLIPS" && (
           <div style={{ padding: "0 0 20px" }}>
-            <div style={{ display: "flex", overflowX: "auto", gap: 10, padding: "14px 16px" }}>
-              {[
-                { label: "TOTAL CLIPS", value: "12", icon: "🎙️", color: "#E8192C" },
-                { label: "TOTAL VIEWS", value: "202K", icon: "👁️", color: "#3B82F6" },
-                { label: "TOTAL LIKES", value: "14.1K", icon: "❤️", color: "#F5A623" },
-                { label: "PUBLISHED", value: "10", icon: "✅", color: "#22C55E" },
-              ].map(s => (
-                <div key={s.label} className="stat-card" style={{ borderTopColor: s.color }}>
-                  <div style={{ fontSize: 9, marginBottom: 2 }}>{s.icon}</div>
-                  <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1, color: "#888" }}>{s.label}</div>
-                  <div style={{ fontSize: 26, fontWeight: 900, color: s.color }}>{s.value}</div>
-                </div>
-              ))}
-            </div>
             <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "4px 16px 10px" }}>
               <div style={{ width: 4, height: 28, background: "#E8192C", borderRadius: 2 }} />
               <span style={{ fontSize: 22, fontWeight: 900 }}>CLIPS</span>
@@ -596,7 +582,13 @@ export default function AlleyKingsDashboard() {
                         <span style={{ background: s.bg, color: s.text, fontSize: 8, fontWeight: 800, padding: "2px 6px", borderRadius: 4 }}>{c.status}</span>
                         <span style={{ fontSize: 9, color: "#888" }}>{c.date}</span>
                       </div>
-                      <div style={{ width: "100%", height: 60, background: "#f4f4f4", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 8, fontSize: 20 }}>🎧</div>
+                      <div style={{ width: "100%", height: 100, background: "#f4f4f4", borderRadius: 8, overflow: "hidden", marginBottom: 8 }}>
+                        {c.thumbnail_url ? (
+                          <img src={c.thumbnail_url} alt={c.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        ) : (
+                          <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24 }}>🎧</div>
+                        )}
+                      </div>
                       <div style={{ fontSize: 9, color: "#888", marginBottom: 4 }}>{c.ep}</div>
                       <div style={{ fontSize: 12, fontWeight: 800, lineHeight: 1.2, marginBottom: 4, color: "#111" }}>{c.title}</div>
                       <div style={{ fontSize: 10, color: "#888", marginBottom: 8 }}>{c.desc}</div>
