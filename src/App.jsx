@@ -126,7 +126,6 @@ export default function AlleyKingsDashboard() {
   const [articles, setArticles] = useState([]);
   const [games, setGames] = useState([]);
   const [scores, setScores] = useState([]);
-  const [markets, setMarkets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [oddsLoading, setOddsLoading] = useState(true);
 
@@ -219,17 +218,6 @@ export default function AlleyKingsDashboard() {
 
         setGames(allGames);
         setScores(allScores);
-
-        // Fetch Polymarket trending markets
-        try {
-          const pmRes = await fetch(`https://gamma-api.polymarket.com/markets?active=true&limit=12&order=volume24hr&ascending=false`);
-          const pmData = await pmRes.json();
-          if (Array.isArray(pmData)) {
-            setMarkets(pmData.filter(m => m.question && m.outcomePrices).slice(0, 12));
-          }
-        } catch (e) {
-          console.error("Polymarket fetch failed:", e);
-        }
       } catch (err) {
         console.error("Data fetch error:", err);
       } finally {
