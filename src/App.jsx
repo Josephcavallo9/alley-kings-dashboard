@@ -326,7 +326,7 @@ export default function AlleyKingsDashboard() {
         .briefing-sidebar { display: flex; flex-direction: column; gap: 16px; }
         .sidebar-card { background: #111; color: #fff; border-radius: 18px; padding: 18px; border: 1px solid #222; }
         .sidebar-title { font-size: 20px; font-weight: 900; margin-bottom: 16px; }
-        .trending-list { max-height: 360px; overflow-y: auto; padding-right: 6px; }
+        .trending-list { max-height: 700px; overflow-y: auto; padding-right: 6px; }
         .trending-item { display: grid; grid-template-columns: 12px 1fr; gap: 10px; text-decoration: none; color: inherit; padding: 12px 0; border-bottom: 1px solid #252525; }
         .trending-headline { font-family: Arial, sans-serif; font-size: 13px; line-height: 1.35; color: #ddd; }
         .trending-meta { margin-top: 5px; font-size: 10px; color: #777; font-weight: 700; }
@@ -479,19 +479,6 @@ export default function AlleyKingsDashboard() {
                 <div style={{ fontSize: 11, color: "#888" }}>Your daily dose of sports culture — curated stories from across the game.</div>
               </div>
             </div>
-            <div style={{ display: "flex", overflowX: "auto", gap: 10, padding: "14px 16px" }}>
-              {[
-                { label: "TOTAL STORIES", value: articles.length || "—", color: "#E8192C" },
-                { label: "BREAKING", value: articles.filter(a => categorizeArticle(a).type === "BREAKING").length || "—", color: "#E8192C" },
-                { label: "TRADES", value: articles.filter(a => categorizeArticle(a).type === "TRADES").length || "—", color: "#3B82F6" },
-                { label: "CULTURE", value: articles.filter(a => categorizeArticle(a).type === "CULTURE").length || "—", color: "#F97316" },
-              ].map(s => (
-                <div key={s.label} className="stat-card" style={{ borderTopColor: s.color }}>
-                  <div style={{ fontSize: 28, fontWeight: 900, color: s.color }}>{s.value}</div>
-                  <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: 1, color: "#888", marginTop: 2 }}>{s.label}</div>
-                </div>
-              ))}
-            </div>
             <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "4px 16px 10px" }}>
               <div style={{ width: 4, height: 28, background: "#E8192C", borderRadius: 2 }} />
               <span style={{ fontSize: 22, fontWeight: 900 }}>ALL STORIES</span>
@@ -547,7 +534,7 @@ export default function AlleyKingsDashboard() {
                   <div className="sidebar-card">
                     <div className="sidebar-title">🔥 Trending Stories</div>
                     <div className="trending-list">
-                      {filteredArticles.slice(1, 8).map((article, i) => {
+                      {filteredArticles.slice(1, 15).map((article, i) => {
                         const cat = categorizeArticle(article);
                         return (
                           <a key={i} href={article.url} target="_blank" rel="noopener noreferrer" className="trending-item">
