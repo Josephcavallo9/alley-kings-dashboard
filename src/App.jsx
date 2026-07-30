@@ -18,6 +18,12 @@ const SPORT_CONFIGS = [
   { key: "americanfootball_nfl", label: "NFL", emoji: "🏈", color: "#4ade80", espnSport: "nfl" },
   { key: "baseball_mlb", label: "MLB", emoji: "⚾", color: "#f87171", espnSport: "mlb" },
   { key: "soccer_epl", label: "EPL", emoji: "⚽", color: "#facc15", espnSport: "soccer" },
+  { key: "soccer_wc", label: "WC", emoji: "🌍", color: "#FFD700", espnSport: "soccer" },
+  { key: "basketball_ncaa", label: "NCAAB", emoji: "🏀", color: "#E8192C", espnSport: "basketball" },
+  { key: "football_ncaa", label: "NCAAF", emoji: "🏈", color: "#22C55E", espnSport: "football" },
+  { key: "baseball_ncaa", label: "NCAAS", emoji: "⚾", color: "#a78bfa", espnSport: "baseball" },
+  { key: "golf_pga", label: "GOLF", emoji: "⛳", color: "#86efac", espnSport: "golf" },
+  { key: "mma_ufc", label: "UFC", emoji: "🥊", color: "#f43f5e", espnSport: "mma" },
 ];
 
 const getESPNLogo = (teamName, sport) => {
@@ -141,12 +147,18 @@ export default function AlleyKingsDashboard() {
 
   useEffect(() => {
     const ESPN_SPORT_MAP = [
-      { espnPath: "basketball/nba", sportConfig: SPORT_CONFIGS[0], priority: 1 },
-      { espnPath: "hockey/nhl", sportConfig: SPORT_CONFIGS[1], priority: 1 },
-      { espnPath: "baseball/mlb", sportConfig: SPORT_CONFIGS[3], priority: 2 },
-      { espnPath: "soccer/eng.1", sportConfig: SPORT_CONFIGS[4], priority: 3 },
-      { espnPath: "football/nfl", sportConfig: SPORT_CONFIGS[2], priority: 4 },
-    ];
+  { espnPath: "basketball/nba", sportConfig: SPORT_CONFIGS[0], priority: 1 },
+  { espnPath: "hockey/nhl", sportConfig: SPORT_CONFIGS[1], priority: 1 },
+  { espnPath: "baseball/mlb", sportConfig: SPORT_CONFIGS[3], priority: 2 },
+  { espnPath: "soccer/eng.1", sportConfig: SPORT_CONFIGS[4], priority: 3 },
+  { espnPath: "football/nfl", sportConfig: SPORT_CONFIGS[2], priority: 4 },
+  { espnPath: "soccer/fifa.world", sportConfig: SPORT_CONFIGS[5], priority: 0 },
+  { espnPath: "basketball/mens-college-basketball", sportConfig: SPORT_CONFIGS[6], priority: 2 },
+  { espnPath: "football/college-football", sportConfig: SPORT_CONFIGS[7], priority: 3 },
+  { espnPath: "baseball/college-baseball", sportConfig: SPORT_CONFIGS[8], priority: 3 },
+  { espnPath: "golf/pga", sportConfig: SPORT_CONFIGS[9], priority: 4 },
+  { espnPath: "mma/ufc", sportConfig: SPORT_CONFIGS[10], priority: 2 },
+];
 
     const fetchAllData = async () => {
       try {
