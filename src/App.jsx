@@ -1,6 +1,7 @@
 import AlleyKingsChat from './AlleyKingsChat';
 import { useState, useEffect } from "react";
 import { supabase } from './supabase';
+import alleyKingsLogo from './alleykings-logo.PNG';
 
 const storyFilters = ["ALL", "BREAKING", "CULTURE", "TRADES", "SCORES", "VIRAL"];
 const clipFilters = ["ALL", "LIVE", "SCHEDULED", "DRAFTS"];
@@ -133,7 +134,9 @@ export default function AlleyKingsDashboard() {
   const [games, setGames] = useState([]);
   const [scores, setScores] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [oddsLoading, setOddsLoading] = useState(true);
+const [oddsLoading, setOddsLoading] = useState(true);
+const [ufcEvents, setUfcEvents] = useState([]);
+const [golfLeaderboard, setGolfLeaderboard] = useState([]);
 
   useEffect(() => {
     const fetchDbData = async () => {
@@ -167,11 +170,16 @@ export default function AlleyKingsDashboard() {
 
         for (const { espnPath, sportConfig, priority } of ESPN_SPORT_MAP) {
           try {
-            const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/${espnPath}/scoreboard`);
+            const today = new Date();
+const yyyy = today.getFullYear();
+const mm = String(today.getMonth() + 1).padStart(2, "0");
+const dd = String(today.getDate()).padStart(2, "0");
+const dateParam = `${yyyy}${mm}${dd}`;
+const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/${espnPath}/scoreboard?dates=${dateParam}`);
             const data = await res.json();
             const events = data.events || [];
 
-            events.slice(0, 8).forEach(event => {
+            events.slice(0, 75).forEach(event => {
               const competition = event.competitions?.[0];
               if (!competition) return;
               const home = competition.competitors?.find(c => c.homeAway === "home");
@@ -228,8 +236,56 @@ export default function AlleyKingsDashboard() {
           return new Date(a.commence_time) - new Date(b.commence_time);
         });
 
-        setGames(allGames);
+      setGames(allGames);
         setScores(allScores);
+        // UFC Fight Card
+try {
+  const ufcRes = await fetch('https://site.api.espn.com/apis/site/v2/sports/mma/ufc/scoreboard');
+  const ufcData = await ufcRes.json();
+  if (ufcData.events?.length > 0) {
+    const event = ufcData.events[0];
+    const fights = event.competitions?.map(fight => ({
+      id: fight.id,
+      weightClass: fight.type?.abbreviation || "",
+      fighter1: fight.competitors?.[0]?.athlete?.displayName || "TBD",
+      fighter1Record: fight.competitors?.[0]?.records?.[0]?.summary || "",
+      fighter1Flag: fight.competitors?.[0]?.athlete?.flag?.href || "",
+      fighter1Winner: fight.competitors?.[0]?.winner || false,
+      fighter2: fight.competitors?.[1]?.athlete?.displayName || "TBD",
+      fighter2Record: fight.competitors?.[1]?.records?.[0]?.summary || "",
+      fighter2Flag: fight.competitors?.[1]?.athlete?.flag?.href || "",
+      fighter2Winner: fight.competitors?.[1]?.winner || false,
+      status: fight.status?.type?.state || "pre",
+      statusDetail: fight.status?.type?.shortDetail || "",
+      isCompleted: fight.status?.type?.completed || false,
+      broadcast: fight.broadcast || "",
+      rounds: fight.format?.regulation?.periods || 3,
+    })) || [];
+    setUfcEvents([{ eventName: event.name, venue: event.venues?.[0]?.fullName || "", fights }]);
+  }
+} catch (e) {
+  console.error("UFC fetch failed:", e);
+}
+
+// Golf Leaderboard
+try {
+  const golfRes = await fetch('https://site.api.espn.com/apis/site/v2/sports/golf/pga/scoreboard');
+  const golfData = await golfRes.json();
+  if (golfData.events?.length > 0) {
+    const event = golfData.events[0];
+    const competitors = event.competitions?.[0]?.competitors?.slice(0, 10).map(p => ({
+      id: p.id,
+      name: p.athlete?.displayName || "",
+      score: p.score?.displayValue || "E",
+      position: p.status?.position?.displayName || p.id,
+      thru: p.status?.thru || "",
+      today: p.linescores?.[p.linescores.length - 1]?.displayValue || "",
+    })) || [];
+    setGolfLeaderboard([{ eventName: event.name || "PGA Tour", competitors }]);
+  }
+} catch (e) {
+  console.error("Golf fetch failed:", e);
+}
       } catch (err) {
         console.error("Data fetch error:", err);
       } finally {
@@ -264,8 +320,21 @@ export default function AlleyKingsDashboard() {
     fetchNews();
   }, []);
 
-  const filteredGames = activeSport === "ALL" ? games : games.filter(g => g.sportConfig.label === activeSport);
-  const filteredScores = activeSport === "ALL" ? scores : scores.filter(g => g.sportConfig.label === activeSport);
+  const filteredGames = games.filter(g => 
+  g.sportConfig.label !== "UFC" && g.sportConfig.label !== "GOLF" &&
+  (activeSport === "ALL" || g.sportConfig.label === activeSport)
+);
+
+const filteredScores = scores.filter(g =>
+  g.sportConfig.label !== "UFC" && g.sportConfig.label !== "GOLF" &&
+  (activeSport === "ALL" || g.sportConfig.label === activeSport)
+).sort((a, b) => {
+  const dateA = new Date(a.commence_time).getTime();
+  const dateB = new Date(b.commence_time).getTime();
+  if (isNaN(dateA)) return 1;
+  if (isNaN(dateB)) return -1;
+  return dateB - dateA;
+});
   const filteredArticles = storyFilter === "ALL" ? articles : articles.filter(a => categorizeArticle(a).type === storyFilter);
   const filteredClips = clipFilter === "ALL" ? dbClips : dbClips.filter(c => clipFilter === "DRAFTS" ? c.status === "DRAFT" : c.status === clipFilter);
   const filteredBets = betFilter === "ALL" ? dbBets : ["PENDING", "WON", "LOST"].includes(betFilter) ? dbBets.filter(b => b.status === betFilter) : dbBets.filter(b => b.bettor === betFilter);
@@ -311,13 +380,6 @@ export default function AlleyKingsDashboard() {
           .bet-card > div:nth-child(2) { text-align: left !important; border-left: none !important; border-right: none !important; border-top: 1px solid #eee; border-bottom: 1px solid #eee; padding: 12px 0 !important; }
           .bet-card > div:nth-child(3) { text-align: left !important; }
         }
-        .briefing-layout {
-          display: grid;
-          grid-template-columns: minmax(0, 1fr) 360px;
-          gap: 22px;
-          padding: 12px 16px 24px;
-          align-items: start;
-        }
         .featured-story {
           display: block;
           text-decoration: none;
@@ -327,31 +389,43 @@ export default function AlleyKingsDashboard() {
           overflow: hidden;
           border: 1px solid #f0f0f0;
           box-shadow: 0 8px 28px rgba(0,0,0,0.06);
+          margin: 0 16px 20px;
         }
-        .featured-image { height: 360px; background: #111; overflow: hidden; }
+        .featured-image { height: 300px; background: #111; overflow: hidden; }
         .featured-image img { width: 100%; height: 100%; object-fit: cover; }
         .featured-placeholder { height: 100%; display: flex; align-items: center; justify-content: center; font-size: 72px; background: linear-gradient(135deg, #111, #e8192c); }
         .featured-content { padding: 22px; }
-        .featured-title { font-size: 34px; font-weight: 900; line-height: 1.05; color: #111; margin-bottom: 10px; }
+        .featured-title { font-size: 30px; font-weight: 900; line-height: 1.05; color: #111; margin-bottom: 10px; }
         .featured-desc { font-family: Arial, sans-serif; font-size: 14px; line-height: 1.5; color: #666; margin-bottom: 14px; }
         .featured-date { font-size: 11px; color: #999; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
-        .briefing-sidebar { display: flex; flex-direction: column; gap: 16px; }
+        .hero-banner { position: relative; padding: 50px 24px; background: linear-gradient(135deg, #1a0000, #0a0a0a); border-bottom: 3px solid #E8192C; display: flex; align-items: center; justify-content: center; }
+        .hero-logo { position: absolute; left: 24px; top: 50%; transform: translateY(-50%); width: 340px; height: auto; }
+        .hero-title { font-size: 42px; font-weight: 900; letter-spacing: 2px; color: white; }
+        .hero-tagline { font-size: 13px; color: #999; letter-spacing: 3px; margin-top: 4px; }
+        .content-layout { display: grid; grid-template-columns: 1fr 340px; gap: 20px; padding: 20px; align-items: start; }
+        .sidebar { display: flex; flex-direction: column; gap: 16px; }
         .sidebar-card { background: #111; color: #fff; border-radius: 18px; padding: 18px; border: 1px solid #222; }
         .sidebar-title { font-size: 20px; font-weight: 900; margin-bottom: 16px; }
-        .trending-list { max-height: 700px; overflow-y: auto; padding-right: 6px; }
-        .trending-item { display: grid; grid-template-columns: 12px 1fr; gap: 10px; text-decoration: none; color: inherit; padding: 12px 0; border-bottom: 1px solid #252525; }
-        .trending-headline { font-family: Arial, sans-serif; font-size: 13px; line-height: 1.35; color: #ddd; }
-        .trending-meta { margin-top: 5px; font-size: 10px; color: #777; font-weight: 700; }
-        .social-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .social-row a { text-align: center; background: #e8192c; color: #fff; text-decoration: none; border-radius: 10px; padding: 10px; font-size: 12px; font-weight: 900; }
+        .trending-item { display: grid; grid-template-columns: 12px 1fr; gap: 10px; padding: 10px 0; border-bottom: 1px solid #252525; font-size: 13px; }
+        .trending-rank { color: #E8192C; font-weight: 900; width: 16px; }
+        .follow-btn { width: 100%; padding: 10px; border-radius: 8px; border: none; font-weight: 800; margin-bottom: 8px; cursor: pointer; color: white; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .follow-btn.tiktok { background: #000; }
+        .follow-btn.twitter { background: #1a1a1a; }
         @media (max-width: 900px) {
-          .briefing-layout { grid-template-columns: 1fr; }
-          .featured-image { height: 240px; }
-          .featured-title { font-size: 26px; }
+          .content-layout { grid-template-columns: 1fr; }
+          .featured-image { height: 220px; }
+          .featured-title { font-size: 24px; }
         }
       `}</style>
+      <div className="hero-banner">
+        <img src={alleyKingsLogo} alt="Alley Kings" className="hero-logo" />
+        <div style={{ textAlign: "center" }}>
+          <div className="hero-title">ALLEY KINGS <span style={{ color: "#E8192C" }}>HQ</span></div>
+          <div className="hero-tagline">SCORES · STORIES · BETS · PODCAST CLIPS</div>
+        </div>
+      </div>
 
-      {/* ── SCOREBOARD HEADER ── */}
+      {/* ── SCOREBOARD HEADER (full width) ── */}
       <div style={{ background: "#0D0D0D", padding: "12px 24px 14px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
           <div style={{ background: "white", borderRadius: 6, padding: "4px 10px" }}>
@@ -372,7 +446,7 @@ export default function AlleyKingsDashboard() {
           ))}
         </div>
 
-        {/* ── LARGE SCORE CARDS (existing full scoreboard) ── */}
+        {/* ── LARGE SCORE CARDS ── */}
         {filteredScores.length > 0 && (
           <div style={{ marginBottom: 14 }}>
             <div style={{ color: "#444", fontSize: 9, fontWeight: 800, letterSpacing: 2, marginBottom: 8 }}>FINAL SCORES</div>
@@ -451,61 +525,122 @@ export default function AlleyKingsDashboard() {
           </div>
         )}
 
-      </div>      {/* ── WHITE CONTENT AREA ── */}
-      <div style={{ background: "white", borderRadius: "20px 20px 0 0" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "20px 16px 16px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ width: 44, height: 44, background: "#FEE2E2", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22 }}>👑</div>
-            <div>
-              <div style={{ fontSize: 20, fontWeight: 900 }}>DAILY <span style={{ color: "#E8192C" }}>BRIEFING</span></div>
-              <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 2, color: "#888" }}>SPORTS CULTURE INTELLIGENCE</div>
+        {/* ── UFC FIGHT CARD ── */}
+        {(activeSport === "UFC") && ufcEvents.map((event, ei) => (
+          <div key={ei} style={{ marginTop: 14 }}>
+            <div style={{ color: "#444", fontSize: 9, fontWeight: 800, letterSpacing: 2, marginBottom: 8, display: "flex", alignItems: "center", gap: 8 }}>
+              <span>🥊 {event.eventName}</span>
+              {event.venue && <span style={{ color: "#333" }}>· {event.venue}</span>}
             </div>
-          </div>
-          <div style={{ textAlign: "right" }}>
-            <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1, color: "#888" }}>LATEST EDITION</div>
-            <div style={{ fontSize: 13, fontWeight: 800, lineHeight: 1.2 }}>
-              {new Date().toLocaleDateString("en-US", { weekday: "short" }).toUpperCase()},<br />
-              {new Date().toLocaleDateString("en-US", { month: "short" }).toUpperCase()} {new Date().getDate()},<br />
-              {new Date().getFullYear()}
-            </div>
-          </div>
-        </div>
-
-        {/* ── MAIN TABS ── */}
-        <div style={{ display: "flex", borderBottom: "1px solid #eee" }}>
-          {[{ key: "BRIEFING", label: "📰 BRIEFING" }, { key: "CLIPS", label: "🎙️ PODCAST CLIPS" }, { key: "BETS", label: "🎲 OUR BETS" }].map(t => (
-            <div key={t.key} className={`tab ${activeTab === t.key ? "active" : ""}`} onClick={() => setActiveTab(t.key)}>{t.label}</div>
-          ))}
-        </div>
-
-        {/* ── SCORES + ODDS BANNER (below tabs, above all content) ── */}
-          
-
-        {/* ── TAB CONTENT ── */}
-        {activeTab === "BRIEFING" && (
-          <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderBottom: "1px solid #eee" }}>
-              <div style={{ width: 50, height: 50, background: "#FEE2E2", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22 }}>👑</div>
-              <div>
-                <div style={{ fontSize: 14, fontWeight: 900 }}>ALLEY KINGS <span style={{ color: "#E8192C" }}>MEDIA</span></div>
-                <div style={{ fontSize: 11, color: "#888" }}>Your daily dose of sports culture — curated stories from across the game.</div>
-              </div>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "4px 16px 10px" }}>
-              <div style={{ width: 4, height: 28, background: "#E8192C", borderRadius: 2 }} />
-              <span style={{ fontSize: 22, fontWeight: 900 }}>ALL STORIES</span>
-              <span style={{ background: "#E8192C", color: "white", fontSize: 10, fontWeight: 800, padding: "2px 7px", borderRadius: 10 }}>{articles.length}</span>
-            </div>
-            <div className="filter-scroll">
-              {storyFilters.map(f => (
-                <button key={f} className="filter-btn" onClick={() => setStoryFilter(f)} style={{ background: storyFilter === f ? "#E8192C" : "#F4F4F4", color: storyFilter === f ? "white" : "#888" }}>{f}</button>
+            <div style={{ display: "flex", gap: 10, overflowX: "auto", paddingBottom: 4 }}>
+              {event.fights.map((fight, fi) => (
+                <div key={fi} style={{ background: "#111", borderRadius: 12, padding: "12px 14px", flexShrink: 0, minWidth: 200, borderTop: "2px solid #f43f5e" }}>
+                  <div style={{ fontSize: 9, color: "#f43f5e", fontWeight: 800, letterSpacing: 1, marginBottom: 8 }}>
+                    {fight.weightClass} · {fight.rounds === 5 ? "5 RDS" : "3 RDS"}
+                  </div>
+                  {[
+                    { name: fight.fighter1, record: fight.fighter1Record, flag: fight.fighter1Flag, winner: fight.fighter1Winner },
+                    { name: fight.fighter2, record: fight.fighter2Record, flag: fight.fighter2Flag, winner: fight.fighter2Winner },
+                  ].map((f, i) => (
+                    <div key={i}>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: i === 0 ? 4 : 0 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          {f.flag && <img src={f.flag} alt="" style={{ width: 16, height: 12, objectFit: "cover", borderRadius: 2 }} />}
+                          <div>
+                            <div style={{ color: f.winner ? "white" : "#ccc", fontSize: 12, fontWeight: f.winner ? 900 : 700, lineHeight: 1 }}>{f.name}</div>
+                            <div style={{ color: "#555", fontSize: 9 }}>{f.record}</div>
+                          </div>
+                        </div>
+                        {f.winner && <span style={{ fontSize: 10, color: "#22C55E", fontWeight: 900 }}>W</span>}
+                      </div>
+                      {i === 0 && <div style={{ textAlign: "center", color: "#333", fontSize: 9, margin: "4px 0" }}>vs</div>}
+                    </div>
+                  ))}
+                  <div style={{ marginTop: 8, fontSize: 9, color: "#444", fontWeight: 700 }}>
+                    {fight.isCompleted ? "FINAL" : fight.statusDetail}
+                  </div>
+                </div>
               ))}
             </div>
-            {loading ? (
-              <div style={{ padding: 30, textAlign: "center", color: "#888", fontSize: 13 }}>Loading latest stories...</div>
-            ) : (
-              <div className="briefing-layout">
-                {(() => {
+          </div>
+        ))}
+
+        {/* ── GOLF LEADERBOARD ── */}
+        {(activeSport === "GOLF") && golfLeaderboard.map((tournament, ti) => (
+          <div key={ti} style={{ marginTop: 14 }}>
+            <div style={{ color: "#444", fontSize: 9, fontWeight: 800, letterSpacing: 2, marginBottom: 8 }}>⛳ {tournament.eventName}</div>
+            <div style={{ background: "#111", borderRadius: 12, padding: "12px 14px", minWidth: 300, maxWidth: 420 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "28px 1fr 40px 40px 40px", gap: 4, marginBottom: 8 }}>
+                {["POS", "PLAYER", "SCORE", "TODAY", "THRU"].map(h => (
+                  <div key={h} style={{ fontSize: 8, color: "#444", fontWeight: 800, letterSpacing: 1 }}>{h}</div>
+                ))}
+              </div>
+              {tournament.competitors.map((p, pi) => (
+                <div key={pi} style={{ display: "grid", gridTemplateColumns: "28px 1fr 40px 40px 40px", gap: 4, padding: "5px 0", borderTop: "1px solid #1a1a1a" }}>
+                  <div style={{ color: pi < 3 ? "#FFD700" : "#555", fontSize: 11, fontWeight: 800 }}>{pi + 1}</div>
+                  <div style={{ color: "white", fontSize: 11, fontWeight: 700 }}>{p.name}</div>
+                  <div style={{ color: p.score?.includes("-") ? "#22C55E" : p.score === "E" ? "white" : "#E8192C", fontSize: 11, fontWeight: 900 }}>{p.score}</div>
+                  <div style={{ color: "#888", fontSize: 10 }}>{p.today}</div>
+                  <div style={{ color: "#555", fontSize: 10 }}>{p.thru}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* ── BELOW SCOREBOARD: BRIEFING (left) + SIDEBAR (right) ── */}
+      <div className="content-layout">
+        <div style={{ minWidth: 0, background: "white", borderRadius: "20px 20px 0 0" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "20px 16px 16px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{ width: 44, height: 44, background: "#FEE2E2", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22 }}>👑</div>
+              <div>
+                <div style={{ fontSize: 20, fontWeight: 900 }}>DAILY <span style={{ color: "#E8192C" }}>BRIEFING</span></div>
+                <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 2, color: "#888" }}>SPORTS CULTURE INTELLIGENCE</div>
+              </div>
+            </div>
+            <div style={{ textAlign: "right" }}>
+              <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1, color: "#888" }}>LATEST EDITION</div>
+              <div style={{ fontSize: 13, fontWeight: 800, lineHeight: 1.2 }}>
+                {new Date().toLocaleDateString("en-US", { weekday: "short" }).toUpperCase()},<br />
+                {new Date().toLocaleDateString("en-US", { month: "short" }).toUpperCase()} {new Date().getDate()},<br />
+                {new Date().getFullYear()}
+              </div>
+            </div>
+          </div>
+
+          {/* ── MAIN TABS ── */}
+          <div style={{ display: "flex", borderBottom: "1px solid #eee" }}>
+            {[{ key: "BRIEFING", label: "📰 BRIEFING" }, { key: "CLIPS", label: "🎙️ PODCAST CLIPS" }, { key: "BETS", label: "🎲 OUR BETS" }].map(t => (
+              <div key={t.key} className={`tab ${activeTab === t.key ? "active" : ""}`} onClick={() => setActiveTab(t.key)}>{t.label}</div>
+            ))}
+          </div>
+
+          {/* ── TAB CONTENT ── */}
+          {activeTab === "BRIEFING" && (
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderBottom: "1px solid #eee" }}>
+                <div style={{ width: 50, height: 50, background: "#FEE2E2", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22 }}>👑</div>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 900 }}>ALLEY KINGS <span style={{ color: "#E8192C" }}>MEDIA</span></div>
+                  <div style={{ fontSize: 11, color: "#888" }}>Your daily dose of sports culture — curated stories from across the game.</div>
+                </div>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "4px 16px 10px" }}>
+                <div style={{ width: 4, height: 28, background: "#E8192C", borderRadius: 2 }} />
+                <span style={{ fontSize: 22, fontWeight: 900 }}>ALL STORIES</span>
+                <span style={{ background: "#E8192C", color: "white", fontSize: 10, fontWeight: 800, padding: "2px 7px", borderRadius: 10 }}>{articles.length}</span>
+              </div>
+              <div className="filter-scroll">
+                {storyFilters.map(f => (
+                  <button key={f} className="filter-btn" onClick={() => setStoryFilter(f)} style={{ background: storyFilter === f ? "#E8192C" : "#F4F4F4", color: storyFilter === f ? "white" : "#888" }}>{f}</button>
+                ))}
+              </div>
+              {loading ? (
+                <div style={{ padding: 30, textAlign: "center", color: "#888", fontSize: 13 }}>Loading latest stories...</div>
+              ) : (
+                (() => {
                   const featured = filteredArticles[0] || {
                     title: "Alley Kings Daily Briefing",
                     description: "Your home for sports culture, picks, reactions, viral moments, and the biggest stories across the game.",
@@ -541,151 +676,144 @@ export default function AlleyKingsDashboard() {
                       </div>
                     </a>
                   );
-                })()}
-                <div className="briefing-sidebar">
-                  <div className="sidebar-card">
-                    <div className="sidebar-title">🔥 Trending Stories</div>
-                    <div className="trending-list">
-                      {filteredArticles.slice(1, 15).map((article, i) => {
-                        const cat = categorizeArticle(article);
-                        return (
-                          <a key={i} href={article.url} target="_blank" rel="noopener noreferrer" className="trending-item">
-                            <span style={{ color: cat.color }}>●</span>
-                            <div>
-                              <div className="trending-headline">{article.title}</div>
-                              <div className="trending-meta">{article.source_name || "Sports News"} · {new Date(article.publishedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</div>
-                            </div>
-                          </a>
-                        );
-                      })}
+                })()
+              )}
+            </div>
+          )}
+
+          {activeTab === "CLIPS" && (
+            <div style={{ padding: "0 0 20px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "4px 16px 10px" }}>
+                <div style={{ width: 4, height: 28, background: "#E8192C", borderRadius: 2 }} />
+                <span style={{ fontSize: 22, fontWeight: 900 }}>CLIPS</span>
+              </div>
+              <div className="filter-scroll">
+                {clipFilters.map(f => (
+                  <button key={f} className="filter-btn" onClick={() => setClipFilter(f)} style={{ background: clipFilter === f ? "#E8192C" : "#F4F4F4", color: clipFilter === f ? "white" : "#888" }}>{f}</button>
+                ))}
+              </div>
+              <div style={{ padding: "10px 16px 0", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                {filteredClips.map(c => {
+                  const s = statusStyle(c.status);
+                  return (
+                    <a key={c.id} href={c.url || "#"} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>
+                      <div className="clip-card" style={{ border: "1px solid #f0f0f0" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+                          <span style={{ background: s.bg, color: s.text, fontSize: 8, fontWeight: 800, padding: "2px 6px", borderRadius: 4 }}>{c.status}</span>
+                          <span style={{ fontSize: 9, color: "#888" }}>{c.date}</span>
+                        </div>
+                        <div style={{ width: "100%", height: 100, background: "#f4f4f4", borderRadius: 8, overflow: "hidden", marginBottom: 8 }}>
+                          {c.thumbnail_url ? (
+                            <img src={c.thumbnail_url} alt={c.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                          ) : (
+                            <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24 }}>🎧</div>
+                          )}
+                        </div>
+                        <div style={{ fontSize: 9, color: "#888", marginBottom: 4 }}>{c.ep}</div>
+                        <div style={{ fontSize: 12, fontWeight: 800, lineHeight: 1.2, marginBottom: 4, color: "#111" }}>{c.title}</div>
+                        <div style={{ fontSize: 10, color: "#888", marginBottom: 8 }}>{c.desc}</div>
+                        <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
+                          <span style={{ background: "#EF4444", color: "white", fontSize: 8, fontWeight: 800, padding: "2px 6px", borderRadius: 4 }}>{c.tag}</span>
+                          <span style={{ fontSize: 9, color: "#888" }}>⏱ {c.duration}</span>
+                          <span style={{ fontSize: 9, color: "#888" }}>👁 {c.views}</span>
+                          <span style={{ fontSize: 9, color: "#888" }}>❤️ {c.likes}</span>
+                        </div>
+                      </div>
+                    </a>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {activeTab === "BETS" && (
+            <div style={{ padding: "0 0 30px" }}>
+              <div style={{ padding: "14px 16px 0" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+                  <div style={{ width: 4, height: 28, background: "#F5A623", borderRadius: 2 }} />
+                  <span style={{ fontSize: 22, fontWeight: 900 }}>LEADERBOARD</span>
+                </div>
+                <div style={{ display: "flex", overflowX: "auto", gap: 10, paddingBottom: 10 }}>
+                  {members.map(m => (
+                    <div key={m.name} className="member-card" style={{ borderColor: m.color }}>
+                      <div style={{ fontSize: 16, marginBottom: 2 }}>{m.emoji}</div>
+                      <div style={{ fontSize: 15, fontWeight: 900, color: m.color }}>{m.name}</div>
+                      <div style={{ fontSize: 9, color: "#888", marginBottom: 6 }}>{m.wins}W {m.losses}L {m.pending}P</div>
+                      <div style={{ fontSize: 11, fontWeight: 800, color: m.pnl.startsWith("+") ? "#22C55E" : m.pnl.startsWith("-") ? "#E8192C" : "#888" }}>{m.pnl}</div>
+                      <div style={{ height: 3, background: m.color, borderRadius: 2, marginTop: 6, width: "60%" }} />
                     </div>
-                  </div>
-                  <div className="sidebar-card social-card">
-                    <div className="sidebar-title">🎥 Follow Alley Kings</div>
-                    <div className="social-row">
-                      <a href="https://www.tiktok.com/" target="_blank" rel="noopener noreferrer">TikTok</a>
-                      <a href="https://twitter.com/" target="_blank" rel="noopener noreferrer">X / Twitter</a>
-                    </div>
-                  </div>
+                  ))}
+                </div>
+                <div style={{ background: "#F4F4F4", borderRadius: 12, padding: "12px 16px", marginBottom: 16, display: "flex", justifyContent: "center", gap: 8, alignItems: "center" }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2, color: "#888" }}>CREW NET P&L:</span>
+                  <span style={{ fontSize: 22, fontWeight: 900, color: "#22C55E" }}>+$111.22</span>
                 </div>
               </div>
-            )}
-          </div>
-        )}
+              <div style={{ padding: "0 16px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+                  <div style={{ width: 4, height: 28, background: "#E8192C", borderRadius: 2 }} />
+                  <span style={{ fontSize: 22, fontWeight: 900 }}>ALL BETS</span>
+                  <span style={{ background: "#E8192C", color: "white", fontSize: 10, fontWeight: 800, padding: "2px 7px", borderRadius: 10 }}>{dbBets.length}</span>
+                </div>
+                <div className="filter-scroll" style={{ margin: "0 -16px", paddingLeft: 16, paddingBottom: 10 }}>
+                  {betFilters.map(f => (
+                    <button key={f} className="filter-btn" onClick={() => setBetFilter(f)} style={{ background: betFilter === f ? "#0A0A0A" : "#F4F4F4", color: betFilter === f ? "white" : "#888" }}>{f}</button>
+                  ))}
+                </div>
+                {filteredBets.map(b => {
+                  const s = statusStyle(b.status);
+                  const member = members.find(m => m.name === b.bettor);
+                  return (
+                    <div key={b.id} className="bet-card" style={{ borderLeftColor: member?.color || "#E8192C", display: "grid", gridTemplateColumns: "1fr 90px 100px", alignItems: "center", gap: 14, padding: "16px 18px", marginBottom: 12, minHeight: 105 }}>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
+                          <span style={{ background: member?.color || "#888", color: "#fff", fontSize: 10, fontWeight: 800, borderRadius: 999, padding: "4px 10px" }}>{b.bettor}</span>
+                          <span style={{ background: "#F4F4F4", color: "#777", fontSize: 10, fontWeight: 800, borderRadius: 999, padding: "4px 10px" }}>{b.sport || "NBA"}</span>
+                        </div>
+                        <div style={{ fontSize: 10, color: "#888", marginBottom: 3 }}>{b.type}</div>
+                        <div style={{ fontSize: 15, fontWeight: 900, color: "#111", lineHeight: 1.25, maxWidth: "100%" }}>{b.detail}</div>
+                        <div style={{ fontSize: 11, color: "#888", marginTop: 4 }}>{b.odds}</div>
+                        {b.note && <div style={{ fontSize: 11, color: "#888", fontStyle: "italic", marginTop: 12, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>💬 {b.note}</div>}
+                      </div>
+                      <div style={{ textAlign: "center", borderLeft: "1px solid #eee", borderRight: "1px solid #eee", padding: "0 10px" }}>
+                        <div style={{ fontSize: 9, color: "#888", fontWeight: 800, letterSpacing: 1, marginBottom: 4 }}>STAKE</div>
+                        <div style={{ fontSize: 22, fontWeight: 900, color: "#111" }}>${b.stake}</div>
+                      </div>
+                      <div style={{ textAlign: "right" }}>
+                        <div style={{ display: "inline-block", background: s.bg, color: s.text, fontSize: 9, fontWeight: 900, borderRadius: 999, padding: "5px 9px", marginBottom: 12 }}>
+                          {b.status === "PENDING" ? "⏳ PENDING" : b.status === "WON" ? "✅ WON" : "❌ LOST"}
+                        </div>
+                        <div style={{ fontSize: 9, color: "#888", fontWeight: 800, letterSpacing: 1, marginBottom: 4 }}>TO WIN</div>
+                        <div style={{ fontSize: 22, fontWeight: 900, color: "#3B82F6" }}>${b.toWin}</div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
 
-        {activeTab === "CLIPS" && (
-          <div style={{ padding: "0 0 20px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "4px 16px 10px" }}>
-              <div style={{ width: 4, height: 28, background: "#E8192C", borderRadius: 2 }} />
-              <span style={{ fontSize: 22, fontWeight: 900 }}>CLIPS</span>
-            </div>
-            <div className="filter-scroll">
-              {clipFilters.map(f => (
-                <button key={f} className="filter-btn" onClick={() => setClipFilter(f)} style={{ background: clipFilter === f ? "#E8192C" : "#F4F4F4", color: clipFilter === f ? "white" : "#888" }}>{f}</button>
-              ))}
-            </div>
-            <div style={{ padding: "10px 16px 0", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-              {filteredClips.map(c => {
-                const s = statusStyle(c.status);
-                return (
-                  <a key={c.id} href={c.url || "#"} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>
-                    <div className="clip-card" style={{ border: "1px solid #f0f0f0" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-                        <span style={{ background: s.bg, color: s.text, fontSize: 8, fontWeight: 800, padding: "2px 6px", borderRadius: 4 }}>{c.status}</span>
-                        <span style={{ fontSize: 9, color: "#888" }}>{c.date}</span>
-                      </div>
-                      <div style={{ width: "100%", height: 100, background: "#f4f4f4", borderRadius: 8, overflow: "hidden", marginBottom: 8 }}>
-                        {c.thumbnail_url ? (
-                          <img src={c.thumbnail_url} alt={c.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                        ) : (
-                          <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24 }}>🎧</div>
-                        )}
-                      </div>
-                      <div style={{ fontSize: 9, color: "#888", marginBottom: 4 }}>{c.ep}</div>
-                      <div style={{ fontSize: 12, fontWeight: 800, lineHeight: 1.2, marginBottom: 4, color: "#111" }}>{c.title}</div>
-                      <div style={{ fontSize: 10, color: "#888", marginBottom: 8 }}>{c.desc}</div>
-                      <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
-                        <span style={{ background: "#EF4444", color: "white", fontSize: 8, fontWeight: 800, padding: "2px 6px", borderRadius: 4 }}>{c.tag}</span>
-                        <span style={{ fontSize: 9, color: "#888" }}>⏱ {c.duration}</span>
-                        <span style={{ fontSize: 9, color: "#888" }}>👁 {c.views}</span>
-                        <span style={{ fontSize: 9, color: "#888" }}>❤️ {c.likes}</span>
-                      </div>
-                    </div>
-                  </a>
-                );
-              })}
-            </div>
+        <div className="sidebar">
+          <div className="sidebar-card">
+            <div className="sidebar-title">🔥 TRENDING STORIES</div>
+            {filteredArticles.slice(0, 5).map((a, i) => (
+              <div className="trending-item" key={i}>
+                <span className="trending-rank">{i + 1}</span>
+                <span>{a.title}</span>
+              </div>
+            ))}
           </div>
-        )}
 
-        {activeTab === "BETS" && (
-          <div style={{ padding: "0 0 30px" }}>
-            <div style={{ padding: "14px 16px 0" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-                <div style={{ width: 4, height: 28, background: "#F5A623", borderRadius: 2 }} />
-                <span style={{ fontSize: 22, fontWeight: 900 }}>LEADERBOARD</span>
-              </div>
-              <div style={{ display: "flex", overflowX: "auto", gap: 10, paddingBottom: 10 }}>
-                {members.map(m => (
-                  <div key={m.name} className="member-card" style={{ borderColor: m.color }}>
-                    <div style={{ fontSize: 16, marginBottom: 2 }}>{m.emoji}</div>
-                    <div style={{ fontSize: 15, fontWeight: 900, color: m.color }}>{m.name}</div>
-                    <div style={{ fontSize: 9, color: "#888", marginBottom: 6 }}>{m.wins}W {m.losses}L {m.pending}P</div>
-                    <div style={{ fontSize: 11, fontWeight: 800, color: m.pnl.startsWith("+") ? "#22C55E" : m.pnl.startsWith("-") ? "#E8192C" : "#888" }}>{m.pnl}</div>
-                    <div style={{ height: 3, background: m.color, borderRadius: 2, marginTop: 6, width: "60%" }} />
-                  </div>
-                ))}
-              </div>
-              <div style={{ background: "#F4F4F4", borderRadius: 12, padding: "12px 16px", marginBottom: 16, display: "flex", justifyContent: "center", gap: 8, alignItems: "center" }}>
-                <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2, color: "#888" }}>CREW NET P&L:</span>
-                <span style={{ fontSize: 22, fontWeight: 900, color: "#22C55E" }}>+$111.22</span>
-              </div>
-            </div>
-            <div style={{ padding: "0 16px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-                <div style={{ width: 4, height: 28, background: "#E8192C", borderRadius: 2 }} />
-                <span style={{ fontSize: 22, fontWeight: 900 }}>ALL BETS</span>
-                <span style={{ background: "#E8192C", color: "white", fontSize: 10, fontWeight: 800, padding: "2px 7px", borderRadius: 10 }}>{dbBets.length}</span>
-              </div>
-              <div className="filter-scroll" style={{ margin: "0 -16px", paddingLeft: 16, paddingBottom: 10 }}>
-                {betFilters.map(f => (
-                  <button key={f} className="filter-btn" onClick={() => setBetFilter(f)} style={{ background: betFilter === f ? "#0A0A0A" : "#F4F4F4", color: betFilter === f ? "white" : "#888" }}>{f}</button>
-                ))}
-              </div>
-              {filteredBets.map(b => {
-                const s = statusStyle(b.status);
-                const member = members.find(m => m.name === b.bettor);
-                return (
-                  <div key={b.id} className="bet-card" style={{ borderLeftColor: member?.color || "#E8192C", display: "grid", gridTemplateColumns: "1fr 90px 100px", alignItems: "center", gap: 14, padding: "16px 18px", marginBottom: 12, minHeight: 105 }}>
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
-                        <span style={{ background: member?.color || "#888", color: "#fff", fontSize: 10, fontWeight: 800, borderRadius: 999, padding: "4px 10px" }}>{b.bettor}</span>
-                        <span style={{ background: "#F4F4F4", color: "#777", fontSize: 10, fontWeight: 800, borderRadius: 999, padding: "4px 10px" }}>{b.sport || "NBA"}</span>
-                      </div>
-                      <div style={{ fontSize: 10, color: "#888", marginBottom: 3 }}>{b.type}</div>
-                      <div style={{ fontSize: 15, fontWeight: 900, color: "#111", lineHeight: 1.25, maxWidth: "100%" }}>{b.detail}</div>
-                      <div style={{ fontSize: 11, color: "#888", marginTop: 4 }}>{b.odds}</div>
-                      {b.note && <div style={{ fontSize: 11, color: "#888", fontStyle: "italic", marginTop: 12, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>💬 {b.note}</div>}
-                    </div>
-                    <div style={{ textAlign: "center", borderLeft: "1px solid #eee", borderRight: "1px solid #eee", padding: "0 10px" }}>
-                      <div style={{ fontSize: 9, color: "#888", fontWeight: 800, letterSpacing: 1, marginBottom: 4 }}>STAKE</div>
-                      <div style={{ fontSize: 22, fontWeight: 900, color: "#111" }}>${b.stake}</div>
-                    </div>
-                    <div style={{ textAlign: "right" }}>
-                      <div style={{ display: "inline-block", background: s.bg, color: s.text, fontSize: 9, fontWeight: 900, borderRadius: 999, padding: "5px 9px", marginBottom: 12 }}>
-                        {b.status === "PENDING" ? "⏳ PENDING" : b.status === "WON" ? "✅ WON" : "❌ LOST"}
-                      </div>
-                      <div style={{ fontSize: 9, color: "#888", fontWeight: 800, letterSpacing: 1, marginBottom: 4 }}>TO WIN</div>
-                      <div style={{ fontSize: 22, fontWeight: 900, color: "#3B82F6" }}>${b.toWin}</div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+          <div className="sidebar-card">
+            <div className="sidebar-title">👑 FOLLOW ALLEY KINGS</div>
+            <button className="follow-btn tiktok" onClick={() => window.open("https://www.tiktok.com/@alleykingz", "_blank")}>🎵 TIKTOK</button>
+            <button className="follow-btn twitter" onClick={() => window.open("https://x.com/Alley_Kings", "_blank")}>𝕏 X / TWITTER</button>
           </div>
-        )}
+        </div>
       </div>
-      <AlleyKingsChat  />
+
+      <AlleyKingsChat />
     </div>
   );
 }
