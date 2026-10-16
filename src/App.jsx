@@ -2,6 +2,7 @@ import AlleyKingsChat from './AlleyKingsChat';
 import { useState, useEffect } from "react";
 import { supabase } from './supabase';
 import alleyKingsLogo from './alleykings-logo.PNG';
+import PickemLeaderboard from './PickemLeaderboard';
 
 const storyFilters = ["ALL", "BREAKING", "CULTURE", "TRADES", "SCORES", "VIRAL"];
 const clipFilters = ["ALL", "LIVE", "SCHEDULED", "DRAFTS"];
@@ -612,7 +613,7 @@ const filteredScores = scores.filter(g =>
 
           {/* ── MAIN TABS ── */}
           <div style={{ display: "flex", borderBottom: "1px solid #eee" }}>
-            {[{ key: "BRIEFING", label: "📰 BRIEFING" }, { key: "CLIPS", label: "🎙️ PODCAST CLIPS" }, { key: "BETS", label: "🎲 OUR BETS" }].map(t => (
+            {[{ key: "BRIEFING", label: "📰 BRIEFING" }, { key: "CLIPS", label: "🎙️ PODCAST CLIPS" }, { key: "BETS", label: "🎲 OUR BETS" }, { key: "PICKEM", label: "🏈 PICK'EM" }].map(t => (
               <div key={t.key} className={`tab ${activeTab === t.key ? "active" : ""}`} onClick={() => setActiveTab(t.key)}>{t.label}</div>
             ))}
           </div>
@@ -792,6 +793,8 @@ const filteredScores = scores.filter(g =>
               </div>
             </div>
           )}
+
+          {activeTab === "PICKEM" && <PickemLeaderboard />}
         </div>
 
         <div className="sidebar">
