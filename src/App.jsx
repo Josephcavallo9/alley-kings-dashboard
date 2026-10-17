@@ -725,8 +725,9 @@ const filteredScores = scores.filter(g =>
                   <button key={f} className="filter-btn" onClick={() => setClipFilter(f)} style={{ background: clipFilter === f ? "#E8192C" : "#1f1f1f", color: clipFilter === f ? "white" : "#888" }}>{f}</button>
                 ))}
               </div>
-              <div style={{ padding: "10px 16px 0", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div style={{ padding: "10px 16px 0", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(190px, 1fr))", gap: 14, alignItems: "start" }}>
                 {filteredClips.map(c => {
+                  const isTikTok = /tiktok\.com\//.test(c.url || "");
                   const s = statusStyle(c.status);
                   return (
                     <a key={c.id} href={c.url || "#"} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>
@@ -735,15 +736,16 @@ const filteredScores = scores.filter(g =>
                           <span style={{ background: s.bg, color: s.text, fontSize: 8, fontWeight: 800, padding: "2px 6px", borderRadius: 4 }}>{c.status}</span>
                           <span style={{ fontSize: 9, color: "#888" }}>{c.date}</span>
                         </div>
-                        <div style={{ position: "relative", width: "100%", aspectRatio: "16 / 9", background: "#1f1f1f", borderRadius: 10, overflow: "hidden", marginBottom: 10 }}>
+                        <div style={{ position: "relative", width: "100%", aspectRatio: isTikTok ? "9 / 16" : "16 / 9", background: "#1f1f1f", borderRadius: 10, overflow: "hidden", marginBottom: 10 }}>
                           {clipThumb(c) ? (
                             <img src={clipThumb(c)} alt={c.title} loading="lazy" onError={e => { e.currentTarget.style.display = "none"; }} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
                           ) : (
                             <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28 }}>🎧</div>
                           )}
                           {clipThumb(c) && (
-                            <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "linear-gradient(to top, rgba(0,0,0,0.45), transparent 55%)" }}>
-                              <div style={{ width: 44, height: 44, borderRadius: "50%", background: "rgba(232,25,44,0.92)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 16, paddingLeft: 3, boxShadow: "0 0 20px rgba(232,25,44,0.5)" }}>▶</div>
+                            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.55), transparent 30%)" }}>
+                              <span style={{ position: "absolute", top: 8, left: 8, background: "rgba(0,0,0,0.75)", color: "#fff", fontSize: 9, fontWeight: 900, letterSpacing: 1, padding: "3px 7px", borderRadius: 4 }}>{isTikTok ? "TIKTOK" : "YOUTUBE"}</span>
+                              <div style={{ position: "absolute", left: 8, bottom: 8, width: 32, height: 32, borderRadius: "50%", background: "rgba(232,25,44,0.95)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 12, paddingLeft: 2, boxShadow: "0 0 16px rgba(232,25,44,0.5)" }}>▶</div>
                             </div>
                           )}
                           {c.duration && <span style={{ position: "absolute", right: 6, bottom: 6, background: "rgba(0,0,0,0.8)", color: "#fff", fontSize: 10, fontWeight: 800, padding: "2px 6px", borderRadius: 4 }}>{c.duration}</span>}
