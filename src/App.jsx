@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { supabase } from './supabase';
 import alleyKingsLogo from './alleykings-logo.PNG';
 import PickemLeaderboard from './PickemLeaderboard';
+import CrewCard, { crewCss } from './CrewCard';
 
 const storyFilters = ["ALL", "BREAKING", "CULTURE", "TRADES", "SCORES", "VIRAL"];
 const clipFilters = ["ALL", "LIVE", "SCHEDULED", "DRAFTS"];
@@ -94,10 +95,10 @@ const getTeamAbbr = (name) => {
 };
 
 const statusStyle = (status) => {
-  if (status === "PUBLISHED" || status === "WON") return { bg: "#DCFCE7", text: "#22C55E" };
-  if (status === "SCHEDULED" || status === "PENDING") return { bg: "#FEF3C7", text: "#D97706" };
-  if (status === "DRAFT" || status === "LOST") return { bg: "#FEE2E2", text: "#E8192C" };
-  return { bg: "#E5E5E5", text: "#888888" };
+  if (status === "PUBLISHED" || status === "WON") return { bg: "rgba(34,197,94,0.15)", text: "#4ade80" };
+  if (status === "SCHEDULED" || status === "PENDING") return { bg: "rgba(245,166,35,0.15)", text: "#F5A623" };
+  if (status === "DRAFT" || status === "LOST") return { bg: "rgba(232,25,44,0.15)", text: "#ff4d5e" };
+  return { bg: "#222", text: "#888888" };
 };
 
 const categorizeArticle = (article) => {
@@ -338,6 +339,19 @@ const filteredScores = scores.filter(g =>
 });
   const filteredArticles = storyFilter === "ALL" ? articles : articles.filter(a => categorizeArticle(a).type === storyFilter);
   const filteredClips = clipFilter === "ALL" ? dbClips : dbClips.filter(c => clipFilter === "DRAFTS" ? c.status === "DRAFT" : c.status === clipFilter);
+  const betPnl = (b) => b.status === "WON" ? Number(b.toWin) || 0 : b.status === "LOST" ? -(Number(b.stake) || 0) : 0;
+  const memberStats = members.map(m => {
+    const mine = dbBets.filter(b => b.bettor === m.name);
+    return {
+      ...m,
+      wins: mine.filter(b => b.status === "WON").length,
+      losses: mine.filter(b => b.status === "LOST").length,
+      pending: mine.filter(b => b.status === "PENDING").length,
+      pnl: mine.reduce((sum, b) => sum + betPnl(b), 0),
+    };
+  }).sort((x, y) => y.pnl - x.pnl);
+  const crewNet = dbBets.reduce((sum, b) => sum + betPnl(b), 0);
+  const fmtMoney = (n) => `${n > 0 ? "+" : n < 0 ? "-" : ""}$${Math.abs(n).toFixed(2)}`;
   const filteredBets = betFilter === "ALL" ? dbBets : ["PENDING", "WON", "LOST"].includes(betFilter) ? dbBets.filter(b => b.status === betFilter) : dbBets.filter(b => b.bettor === betFilter);
 
   return (
@@ -356,17 +370,21 @@ const filteredScores = scores.filter(g =>
         .sport-btn { padding: 5px 12px; border-radius: 6px; border: 1px solid #2a2a2a; font-size: 11px; font-weight: 700; cursor: pointer; white-space: nowrap; transition: all 0.15s; }
         .sport-btn.active { background: white; color: black; border-color: white; }
         .sport-btn:not(.active) { background: transparent; color: #888; }
-        .story-row { background: white; padding: 14px 16px; border-bottom: 1px solid #F0F0F0; border-left: 3px solid; display: flex; align-items: flex-start; gap: 10px; cursor: pointer; }
-        .story-row:hover { background: #fafafa; }
-        .member-card { background: white; border-radius: 12px; padding: 12px; min-width: 120px; flex-shrink: 0; border: 2px solid; }
-        .stat-card { background: white; border-radius: 12px; padding: 14px 10px; min-width: 100px; flex-shrink: 0; text-align: center; border-top: 3px solid; }
-        .clip-card { background: white; border-radius: 12px; padding: 14px; }
+        .story-row { background: #161616; padding: 14px 16px; border-bottom: 1px solid #222; border-left: 3px solid; display: flex; align-items: flex-start; gap: 10px; cursor: pointer; }
+        .story-row:hover { background: #1c1c1c; }
+        .member-card { background: #161616; border-radius: 12px; padding: 12px; min-width: 120px; flex-shrink: 0; border: 2px solid; }
+        .stat-card { background: #161616; border-radius: 12px; padding: 14px 10px; min-width: 100px; flex-shrink: 0; text-align: center; border-top: 3px solid; }
+        .clip-card { background: #161616; border-radius: 12px; padding: 14px; }
         .bet-card {
-          background: #fff;
+          background: linear-gradient(135deg, #1c1c1c 0%, #121212 100%);
           border-radius: 18px;
+          border: 1px solid #262626;
           border-left: 5px solid #e8192c;
-          box-shadow: 0 4px 18px rgba(0,0,0,0.04);
+          transition: transform 0.15s ease, box-shadow 0.15s ease;
         }
+        .bet-card:hover { transform: translateY(-2px); }
+        ${crewCss}
+        .pnl-banner { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 18px 16px; margin-bottom: 18px; border-radius: 16px; border: 1px solid #2a1215; background: radial-gradient(ellipse at 50% 0%, rgba(232,25,44,0.28), #121212 70%); }
         .news-ticker { overflow: hidden; background: #E8192C; padding: 7px 0; }
         .news-ticker-inner { display: inline-block; white-space: nowrap; animation: newsticker 90s linear infinite; }
         .odds-ticker { overflow: hidden; background: #141414; border-top: 1px solid #222; border-bottom: 1px solid #222; padding: 5px 0; }
@@ -378,26 +396,26 @@ const filteredScores = scores.filter(g =>
         .upcoming-card { background: #111; border-radius: 12px; padding: 14px; flex-shrink: 0; min-width: 175px; }
         @media (max-width: 600px) {
           .bet-card { grid-template-columns: 1fr !important; gap: 14px; }
-          .bet-card > div:nth-child(2) { text-align: left !important; border-left: none !important; border-right: none !important; border-top: 1px solid #eee; border-bottom: 1px solid #eee; padding: 12px 0 !important; }
+          .bet-card > div:nth-child(2) { text-align: left !important; border-left: none !important; border-right: none !important; border-top: 1px solid #2a2a2a; border-bottom: 1px solid #2a2a2a; padding: 12px 0 !important; }
           .bet-card > div:nth-child(3) { text-align: left !important; }
         }
         .featured-story {
           display: block;
           text-decoration: none;
           color: inherit;
-          background: #fff;
+          background: #161616;
           border-radius: 18px;
           overflow: hidden;
-          border: 1px solid #f0f0f0;
-          box-shadow: 0 8px 28px rgba(0,0,0,0.06);
+          border: 1px solid #222;
+          box-shadow: none;
           margin: 0 16px 20px;
         }
         .featured-image { height: 300px; background: #111; overflow: hidden; }
         .featured-image img { width: 100%; height: 100%; object-fit: cover; }
         .featured-placeholder { height: 100%; display: flex; align-items: center; justify-content: center; font-size: 72px; background: linear-gradient(135deg, #111, #e8192c); }
         .featured-content { padding: 22px; }
-        .featured-title { font-size: 30px; font-weight: 900; line-height: 1.05; color: #111; margin-bottom: 10px; }
-        .featured-desc { font-family: Arial, sans-serif; font-size: 14px; line-height: 1.5; color: #666; margin-bottom: 14px; }
+        .featured-title { font-size: 30px; font-weight: 900; line-height: 1.05; color: #fff; margin-bottom: 10px; }
+        .featured-desc { font-family: Arial, sans-serif; font-size: 14px; line-height: 1.5; color: #aaa; margin-bottom: 14px; }
         .featured-date { font-size: 11px; color: #999; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
         .hero-banner { position: relative; padding: 50px 24px; background: linear-gradient(135deg, #1a0000, #0a0a0a); border-bottom: 3px solid #E8192C; display: flex; align-items: center; justify-content: center; }
         .hero-logo { position: absolute; left: 24px; top: 50%; transform: translateY(-50%); width: 340px; height: auto; }
@@ -592,10 +610,10 @@ const filteredScores = scores.filter(g =>
 
       {/* ── BELOW SCOREBOARD: BRIEFING (left) + SIDEBAR (right) ── */}
       <div className="content-layout">
-        <div style={{ minWidth: 0, background: "white", borderRadius: "20px 20px 0 0" }}>
+        <div style={{ minWidth: 0, background: "#0f0f0f", color: "#f2f2f2", border: "1px solid #222", borderRadius: "20px 20px 0 0" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "20px 16px 16px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <div style={{ width: 44, height: 44, background: "#FEE2E2", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22 }}>👑</div>
+              <div style={{ width: 44, height: 44, background: "#2a1215", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22 }}>👑</div>
               <div>
                 <div style={{ fontSize: 20, fontWeight: 900 }}>DAILY <span style={{ color: "#E8192C" }}>BRIEFING</span></div>
                 <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 2, color: "#888" }}>SPORTS CULTURE INTELLIGENCE</div>
@@ -612,7 +630,7 @@ const filteredScores = scores.filter(g =>
           </div>
 
           {/* ── MAIN TABS ── */}
-          <div style={{ display: "flex", borderBottom: "1px solid #eee" }}>
+          <div style={{ display: "flex", borderBottom: "1px solid #222" }}>
             {[{ key: "BRIEFING", label: "📰 BRIEFING" }, { key: "CLIPS", label: "🎙️ PODCAST CLIPS" }, { key: "BETS", label: "🎲 OUR BETS" }, { key: "PICKEM", label: "🏈 PICK'EM" }].map(t => (
               <div key={t.key} className={`tab ${activeTab === t.key ? "active" : ""}`} onClick={() => setActiveTab(t.key)}>{t.label}</div>
             ))}
@@ -621,8 +639,8 @@ const filteredScores = scores.filter(g =>
           {/* ── TAB CONTENT ── */}
           {activeTab === "BRIEFING" && (
             <div>
-              <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderBottom: "1px solid #eee" }}>
-                <div style={{ width: 50, height: 50, background: "#FEE2E2", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22 }}>👑</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderBottom: "1px solid #222" }}>
+                <div style={{ width: 50, height: 50, background: "#2a1215", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22 }}>👑</div>
                 <div>
                   <div style={{ fontSize: 14, fontWeight: 900 }}>ALLEY KINGS <span style={{ color: "#E8192C" }}>MEDIA</span></div>
                   <div style={{ fontSize: 11, color: "#888" }}>Your daily dose of sports culture — curated stories from across the game.</div>
@@ -635,7 +653,7 @@ const filteredScores = scores.filter(g =>
               </div>
               <div className="filter-scroll">
                 {storyFilters.map(f => (
-                  <button key={f} className="filter-btn" onClick={() => setStoryFilter(f)} style={{ background: storyFilter === f ? "#E8192C" : "#F4F4F4", color: storyFilter === f ? "white" : "#888" }}>{f}</button>
+                  <button key={f} className="filter-btn" onClick={() => setStoryFilter(f)} style={{ background: storyFilter === f ? "#E8192C" : "#1f1f1f", color: storyFilter === f ? "white" : "#888" }}>{f}</button>
                 ))}
               </div>
               {loading ? (
@@ -690,7 +708,7 @@ const filteredScores = scores.filter(g =>
               </div>
               <div className="filter-scroll">
                 {clipFilters.map(f => (
-                  <button key={f} className="filter-btn" onClick={() => setClipFilter(f)} style={{ background: clipFilter === f ? "#E8192C" : "#F4F4F4", color: clipFilter === f ? "white" : "#888" }}>{f}</button>
+                  <button key={f} className="filter-btn" onClick={() => setClipFilter(f)} style={{ background: clipFilter === f ? "#E8192C" : "#1f1f1f", color: clipFilter === f ? "white" : "#888" }}>{f}</button>
                 ))}
               </div>
               <div style={{ padding: "10px 16px 0", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
@@ -698,12 +716,12 @@ const filteredScores = scores.filter(g =>
                   const s = statusStyle(c.status);
                   return (
                     <a key={c.id} href={c.url || "#"} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>
-                      <div className="clip-card" style={{ border: "1px solid #f0f0f0" }}>
+                      <div className="clip-card" style={{ border: "1px solid #222" }}>
                         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
                           <span style={{ background: s.bg, color: s.text, fontSize: 8, fontWeight: 800, padding: "2px 6px", borderRadius: 4 }}>{c.status}</span>
                           <span style={{ fontSize: 9, color: "#888" }}>{c.date}</span>
                         </div>
-                        <div style={{ width: "100%", height: 100, background: "#f4f4f4", borderRadius: 8, overflow: "hidden", marginBottom: 8 }}>
+                        <div style={{ width: "100%", height: 100, background: "#1f1f1f", borderRadius: 8, overflow: "hidden", marginBottom: 8 }}>
                           {c.thumbnail_url ? (
                             <img src={c.thumbnail_url} alt={c.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                           ) : (
@@ -711,7 +729,7 @@ const filteredScores = scores.filter(g =>
                           )}
                         </div>
                         <div style={{ fontSize: 9, color: "#888", marginBottom: 4 }}>{c.ep}</div>
-                        <div style={{ fontSize: 12, fontWeight: 800, lineHeight: 1.2, marginBottom: 4, color: "#111" }}>{c.title}</div>
+                        <div style={{ fontSize: 12, fontWeight: 800, lineHeight: 1.2, marginBottom: 4, color: "#fff" }}>{c.title}</div>
                         <div style={{ fontSize: 10, color: "#888", marginBottom: 8 }}>{c.desc}</div>
                         <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
                           <span style={{ background: "#EF4444", color: "white", fontSize: 8, fontWeight: 800, padding: "2px 6px", borderRadius: 4 }}>{c.tag}</span>
@@ -734,20 +752,17 @@ const filteredScores = scores.filter(g =>
                   <div style={{ width: 4, height: 28, background: "#F5A623", borderRadius: 2 }} />
                   <span style={{ fontSize: 22, fontWeight: 900 }}>LEADERBOARD</span>
                 </div>
-                <div style={{ display: "flex", overflowX: "auto", gap: 10, paddingBottom: 10 }}>
-                  {members.map(m => (
-                    <div key={m.name} className="member-card" style={{ borderColor: m.color }}>
-                      <div style={{ fontSize: 16, marginBottom: 2 }}>{m.emoji}</div>
-                      <div style={{ fontSize: 15, fontWeight: 900, color: m.color }}>{m.name}</div>
-                      <div style={{ fontSize: 9, color: "#888", marginBottom: 6 }}>{m.wins}W {m.losses}L {m.pending}P</div>
-                      <div style={{ fontSize: 11, fontWeight: 800, color: m.pnl.startsWith("+") ? "#22C55E" : m.pnl.startsWith("-") ? "#E8192C" : "#888" }}>{m.pnl}</div>
-                      <div style={{ height: 3, background: m.color, borderRadius: 2, marginTop: 6, width: "60%" }} />
-                    </div>
+                <div className="crew-row">
+                  {memberStats.map((m, i) => (
+                    <CrewCard key={m.name} emoji={m.emoji} name={m.name} color={m.color}
+                      tag={`${m.wins}W · ${m.losses}L${m.pending ? ` · ${m.pending}P` : ""}`}
+                      value={fmtMoney(m.pnl)} valueColor={m.pnl > 0 ? "#4ade80" : m.pnl < 0 ? "#ff4d5e" : "#888"}
+                      sub="NET P&L" crowned={i === 0 && m.pnl > 0} />
                   ))}
                 </div>
-                <div style={{ background: "#F4F4F4", borderRadius: 12, padding: "12px 16px", marginBottom: 16, display: "flex", justifyContent: "center", gap: 8, alignItems: "center" }}>
-                  <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2, color: "#888" }}>CREW NET P&L:</span>
-                  <span style={{ fontSize: 22, fontWeight: 900, color: "#22C55E" }}>+$111.22</span>
+                <div className="pnl-banner">
+                  <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: 3, color: "#bbb" }}>CREW NET P&L</span>
+                  <span style={{ fontSize: 36, fontWeight: 900, lineHeight: 1, color: crewNet >= 0 ? "#4ade80" : "#ff4d5e", textShadow: `0 0 24px ${crewNet >= 0 ? "rgba(74,222,128,0.45)" : "rgba(255,77,94,0.45)"}` }}>{fmtMoney(crewNet)}</span>
                 </div>
               </div>
               <div style={{ padding: "0 16px" }}>
@@ -758,34 +773,34 @@ const filteredScores = scores.filter(g =>
                 </div>
                 <div className="filter-scroll" style={{ margin: "0 -16px", paddingLeft: 16, paddingBottom: 10 }}>
                   {betFilters.map(f => (
-                    <button key={f} className="filter-btn" onClick={() => setBetFilter(f)} style={{ background: betFilter === f ? "#0A0A0A" : "#F4F4F4", color: betFilter === f ? "white" : "#888" }}>{f}</button>
+                    <button key={f} className="filter-btn" onClick={() => setBetFilter(f)} style={{ background: betFilter === f ? "#E8192C" : "#1f1f1f", color: betFilter === f ? "white" : "#888" }}>{f}</button>
                   ))}
                 </div>
                 {filteredBets.map(b => {
                   const s = statusStyle(b.status);
                   const member = members.find(m => m.name === b.bettor);
                   return (
-                    <div key={b.id} className="bet-card" style={{ borderLeftColor: member?.color || "#E8192C", display: "grid", gridTemplateColumns: "1fr 90px 100px", alignItems: "center", gap: 14, padding: "16px 18px", marginBottom: 12, minHeight: 105 }}>
+                    <div key={b.id} className="bet-card" style={{ borderLeftColor: member?.color || "#E8192C", boxShadow: `0 0 26px ${(member?.color || "#E8192C")}1f`, display: "grid", gridTemplateColumns: "1fr 90px 100px", alignItems: "center", gap: 14, padding: "16px 18px", marginBottom: 12, minHeight: 105 }}>
                       <div style={{ minWidth: 0 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
                           <span style={{ background: member?.color || "#888", color: "#fff", fontSize: 10, fontWeight: 800, borderRadius: 999, padding: "4px 10px" }}>{b.bettor}</span>
-                          <span style={{ background: "#F4F4F4", color: "#777", fontSize: 10, fontWeight: 800, borderRadius: 999, padding: "4px 10px" }}>{b.sport || "NBA"}</span>
+                          <span style={{ background: "#1f1f1f", color: "#999", fontSize: 10, fontWeight: 800, borderRadius: 999, padding: "4px 10px" }}>{b.sport || "NBA"}</span>
                         </div>
                         <div style={{ fontSize: 10, color: "#888", marginBottom: 3 }}>{b.type}</div>
-                        <div style={{ fontSize: 15, fontWeight: 900, color: "#111", lineHeight: 1.25, maxWidth: "100%" }}>{b.detail}</div>
+                        <div style={{ fontSize: 15, fontWeight: 900, color: "#fff", lineHeight: 1.25, maxWidth: "100%" }}>{b.detail}</div>
                         <div style={{ fontSize: 11, color: "#888", marginTop: 4 }}>{b.odds}</div>
                         {b.note && <div style={{ fontSize: 11, color: "#888", fontStyle: "italic", marginTop: 12, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>💬 {b.note}</div>}
                       </div>
-                      <div style={{ textAlign: "center", borderLeft: "1px solid #eee", borderRight: "1px solid #eee", padding: "0 10px" }}>
+                      <div style={{ textAlign: "center", borderLeft: "1px solid #222", borderRight: "1px solid #222", padding: "0 10px" }}>
                         <div style={{ fontSize: 9, color: "#888", fontWeight: 800, letterSpacing: 1, marginBottom: 4 }}>STAKE</div>
-                        <div style={{ fontSize: 22, fontWeight: 900, color: "#111" }}>${b.stake}</div>
+                        <div style={{ fontSize: 26, fontWeight: 900, color: "#fff" }}>${b.stake}</div>
                       </div>
                       <div style={{ textAlign: "right" }}>
                         <div style={{ display: "inline-block", background: s.bg, color: s.text, fontSize: 9, fontWeight: 900, borderRadius: 999, padding: "5px 9px", marginBottom: 12 }}>
                           {b.status === "PENDING" ? "⏳ PENDING" : b.status === "WON" ? "✅ WON" : "❌ LOST"}
                         </div>
                         <div style={{ fontSize: 9, color: "#888", fontWeight: 800, letterSpacing: 1, marginBottom: 4 }}>TO WIN</div>
-                        <div style={{ fontSize: 22, fontWeight: 900, color: "#3B82F6" }}>${b.toWin}</div>
+                        <div style={{ fontSize: 26, fontWeight: 900, color: "#4ade80", textShadow: "0 0 18px rgba(74,222,128,0.35)" }}>${b.toWin}</div>
                       </div>
                     </div>
                   );

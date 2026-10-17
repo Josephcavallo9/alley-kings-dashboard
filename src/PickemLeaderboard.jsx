@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "./supabase";
+import CrewCard from "./CrewCard";
 
 const PLAYERS = [
   { name: "Joe", color: "#22C55E", emoji: "👑" },
@@ -16,7 +17,7 @@ const SectionHeader = ({ color, title }) => (
   </div>
 );
 
-const inputStyle = { background: "#F4F4F4", border: "1px solid #e5e5e5", borderRadius: 8, padding: "8px 10px", fontSize: 13, color: "#111" };
+const inputStyle = { background: "#1f1f1f", border: "1px solid #2a2a2a", borderRadius: 8, padding: "8px 10px", fontSize: 13, color: "#fff" };
 
 export default function PickemLeaderboard() {
   const [rows, setRows] = useState([]);
@@ -74,21 +75,18 @@ export default function PickemLeaderboard() {
       {loading ? (
         <div style={{ color: "#888", fontSize: 13, marginBottom: 16 }}>Loading…</div>
       ) : (
-        <div style={{ display: "flex", overflowX: "auto", gap: 10, paddingBottom: 10, marginBottom: 6 }}>
+        <div className="crew-row">
           {standings.map((s, i) => (
-            <div key={s.name} className="member-card" style={{ borderColor: s.color }}>
-              <div style={{ fontSize: 16, marginBottom: 2 }}>{i === 0 && s.pts > 0 ? "🏆" : s.emoji}</div>
-              <div style={{ fontSize: 15, fontWeight: 900, color: s.color }}>{s.name}</div>
-              <div style={{ fontSize: 22, fontWeight: 900, color: "#111" }}>{s.pts}<span style={{ fontSize: 10, color: "#888" }}> PTS</span></div>
-              <div style={{ fontSize: 9, color: "#888" }}>ATS {s.w}-{s.l}{s.push ? `-${s.push}` : ""} · SPECIALS {s.specials}/{s.weeks}</div>
-              <div style={{ height: 3, background: s.color, borderRadius: 2, marginTop: 6, width: "60%" }} />
-            </div>
+            <CrewCard key={s.name} emoji={s.emoji} name={s.name} color={s.color}
+              tag={`#${i + 1} · ATS ${s.w}-${s.l}${s.push ? `-${s.push}` : ""}`}
+              value={`${s.pts} PTS`} sub={`SPECIALS ${s.specials}/${s.weeks}`}
+              crowned={i === 0 && s.pts > 0} />
           ))}
         </div>
       )}
 
       {lastPlace && (
-        <div style={{ background: "#FDECEE", borderRadius: 12, padding: "12px 16px", marginBottom: 20, textAlign: "center", fontSize: 13, fontWeight: 800, color: "#E8192C" }}>
+        <div style={{ background: "#2a1215", borderRadius: 12, padding: "12px 16px", marginBottom: 20, textAlign: "center", fontSize: 13, fontWeight: 800, color: "#E8192C" }}>
           WEEK {latest} PUNISHMENT: {lastPlace.player.toUpperCase()} 🫡
         </div>
       )}
@@ -102,7 +100,7 @@ export default function PickemLeaderboard() {
               {rows.filter((r) => r.week === w).map((r) => {
                 const p = PLAYERS.find((x) => x.name === r.player);
                 return (
-                  <div key={r.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 0", borderTop: "1px solid #f0f0f0", fontSize: 13, flexWrap: "wrap" }}>
+                  <div key={r.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 0", borderTop: "1px solid #222", fontSize: 13, flexWrap: "wrap" }}>
                     <span style={{ background: p?.color || "#888", color: "#fff", fontSize: 10, fontWeight: 800, borderRadius: 999, padding: "3px 9px" }}>{r.player}</span>
                     <span style={{ fontWeight: 800 }}>{r.ats_wins}-{r.ats_losses}{r.ats_pushes ? `-${r.ats_pushes}` : ""} ATS</span>
                     <span style={{ color: "#888", flex: 1, minWidth: 120 }}>⭐ {r.special_pick || "—"} {r.special_hit ? "✅" : "❌"}</span>
