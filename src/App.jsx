@@ -94,6 +94,12 @@ const getTeamAbbr = (name) => {
   return name.split(" ").slice(-1)[0].slice(0, 3).toUpperCase();
 };
 
+const youtubeThumb = (url) => {
+  if (!url) return "";
+  const m = url.match(/(?:youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|embed\/|live\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+  return m ? `https://img.youtube.com/vi/${m[1]}/hqdefault.jpg` : "";
+};
+
 const statusStyle = (status) => {
   if (status === "PUBLISHED" || status === "WON") return { bg: "rgba(34,197,94,0.15)", text: "#4ade80" };
   if (status === "SCHEDULED" || status === "PENDING") return { bg: "rgba(245,166,35,0.15)", text: "#F5A623" };
@@ -721,16 +727,22 @@ const filteredScores = scores.filter(g =>
                           <span style={{ background: s.bg, color: s.text, fontSize: 8, fontWeight: 800, padding: "2px 6px", borderRadius: 4 }}>{c.status}</span>
                           <span style={{ fontSize: 9, color: "#888" }}>{c.date}</span>
                         </div>
-                        <div style={{ width: "100%", height: 100, background: "#1f1f1f", borderRadius: 8, overflow: "hidden", marginBottom: 8 }}>
-                          {c.thumbnail_url ? (
-                            <img src={c.thumbnail_url} alt={c.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        <div style={{ position: "relative", width: "100%", aspectRatio: "16 / 9", background: "#1f1f1f", borderRadius: 10, overflow: "hidden", marginBottom: 10 }}>
+                          {(c.thumbnail_url || youtubeThumb(c.url)) ? (
+                            <img src={c.thumbnail_url || youtubeThumb(c.url)} alt={c.title} loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
                           ) : (
-                            <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24 }}>🎧</div>
+                            <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28 }}>🎧</div>
                           )}
+                          {youtubeThumb(c.url) && (
+                            <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "linear-gradient(to top, rgba(0,0,0,0.45), transparent 55%)" }}>
+                              <div style={{ width: 44, height: 44, borderRadius: "50%", background: "rgba(232,25,44,0.92)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 16, paddingLeft: 3, boxShadow: "0 0 20px rgba(232,25,44,0.5)" }}>▶</div>
+                            </div>
+                          )}
+                          {c.duration && <span style={{ position: "absolute", right: 6, bottom: 6, background: "rgba(0,0,0,0.8)", color: "#fff", fontSize: 10, fontWeight: 800, padding: "2px 6px", borderRadius: 4 }}>{c.duration}</span>}
                         </div>
                         <div style={{ fontSize: 9, color: "#888", marginBottom: 4 }}>{c.ep}</div>
                         <div style={{ fontSize: 12, fontWeight: 800, lineHeight: 1.2, marginBottom: 4, color: "#fff" }}>{c.title}</div>
-                        <div style={{ fontSize: 10, color: "#888", marginBottom: 8 }}>{c.desc}</div>
+                        <div style={{ fontSize: 10, color: "#888", marginBottom: 8 }}>{c.desc || c.description}</div>
                         <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
                           <span style={{ background: "#EF4444", color: "white", fontSize: 8, fontWeight: 800, padding: "2px 6px", borderRadius: 4 }}>{c.tag}</span>
                           <span style={{ fontSize: 9, color: "#888" }}>⏱ {c.duration}</span>
