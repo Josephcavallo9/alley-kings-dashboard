@@ -100,6 +100,14 @@ const youtubeThumb = (url) => {
   return m ? `https://img.youtube.com/vi/${m[1]}/hqdefault.jpg` : "";
 };
 
+const clipThumb = (c) => {
+  if (c.thumbnail_url) return c.thumbnail_url;
+  const yt = youtubeThumb(c.url);
+  if (yt) return yt;
+  if (/tiktok\.com\//.test(c.url || "")) return `/.netlify/functions/tiktok-thumb?url=${encodeURIComponent(c.url)}`;
+  return "";
+};
+
 const statusStyle = (status) => {
   if (status === "PUBLISHED" || status === "WON") return { bg: "rgba(34,197,94,0.15)", text: "#4ade80" };
   if (status === "SCHEDULED" || status === "PENDING") return { bg: "rgba(245,166,35,0.15)", text: "#F5A623" };
@@ -728,12 +736,12 @@ const filteredScores = scores.filter(g =>
                           <span style={{ fontSize: 9, color: "#888" }}>{c.date}</span>
                         </div>
                         <div style={{ position: "relative", width: "100%", aspectRatio: "16 / 9", background: "#1f1f1f", borderRadius: 10, overflow: "hidden", marginBottom: 10 }}>
-                          {(c.thumbnail_url || youtubeThumb(c.url)) ? (
-                            <img src={c.thumbnail_url || youtubeThumb(c.url)} alt={c.title} loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                          {clipThumb(c) ? (
+                            <img src={clipThumb(c)} alt={c.title} loading="lazy" onError={e => { e.currentTarget.style.display = "none"; }} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
                           ) : (
                             <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28 }}>🎧</div>
                           )}
-                          {youtubeThumb(c.url) && (
+                          {clipThumb(c) && (
                             <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "linear-gradient(to top, rgba(0,0,0,0.45), transparent 55%)" }}>
                               <div style={{ width: 44, height: 44, borderRadius: "50%", background: "rgba(232,25,44,0.92)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 16, paddingLeft: 3, boxShadow: "0 0 20px rgba(232,25,44,0.5)" }}>▶</div>
                             </div>
