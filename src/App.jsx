@@ -388,6 +388,14 @@ const filteredScores = scores.filter(g =>
         .story-row:hover { background: #1c1c1c; }
         .member-card { background: #161616; border-radius: 12px; padding: 12px; min-width: 120px; flex-shrink: 0; border: 2px solid; }
         .stat-card { background: #161616; border-radius: 12px; padding: 14px 10px; min-width: 100px; flex-shrink: 0; text-align: center; border-top: 3px solid; }
+        .clip-shelf { display: flex; gap: 14px; overflow-x: auto; padding: 0 16px 12px; scroll-snap-type: x mandatory; scrollbar-width: thin; scrollbar-color: #333 transparent; }
+        .clip-link { text-decoration: none; flex: 0 0 auto; scroll-snap-align: start; }
+        .clip-link.short { width: 200px; }
+        .clip-link.wide { width: 320px; }
+        .clip-link .clip-card { transition: transform 0.15s ease, border-color 0.15s ease; }
+        .clip-link:hover .clip-card { transform: translateY(-3px); border-color: #E8192C !important; }
+        .clamp-1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+        .clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         .clip-card { background: #161616; border-radius: 12px; padding: 14px; }
         .bet-card {
           background: linear-gradient(135deg, #1c1c1c 0%, #121212 100%);
@@ -725,13 +733,14 @@ const filteredScores = scores.filter(g =>
                   <button key={f} className="filter-btn" onClick={() => setClipFilter(f)} style={{ background: clipFilter === f ? "#E8192C" : "#1f1f1f", color: clipFilter === f ? "white" : "#888" }}>{f}</button>
                 ))}
               </div>
-              <div style={{ padding: "10px 16px 0", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(190px, 1fr))", gap: 14, alignItems: "start" }}>
-                {filteredClips.map(c => {
-                  const isTikTok = /tiktok\.com\//.test(c.url || "");
+              {(() => {
+                const isTT = (c) => /tiktok\.com\//.test(c.url || "");
+                const renderClip = (c) => {
+                  const isTikTok = isTT(c);
                   const s = statusStyle(c.status);
                   return (
-                    <a key={c.id} href={c.url || "#"} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>
-                      <div className="clip-card" style={{ border: "1px solid #222" }}>
+                    <a key={c.id} href={c.url || "#"} target="_blank" rel="noopener noreferrer" className={`clip-link ${isTikTok ? "short" : "wide"}`}>
+                      <div className="clip-card" style={{ border: "1px solid #222", height: "100%" }}>
                         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
                           <span style={{ background: s.bg, color: s.text, fontSize: 8, fontWeight: 800, padding: "2px 6px", borderRadius: 4 }}>{c.status}</span>
                           <span style={{ fontSize: 9, color: "#888" }}>{c.date}</span>
@@ -751,8 +760,8 @@ const filteredScores = scores.filter(g =>
                           {c.duration && <span style={{ position: "absolute", right: 6, bottom: 6, background: "rgba(0,0,0,0.8)", color: "#fff", fontSize: 10, fontWeight: 800, padding: "2px 6px", borderRadius: 4 }}>{c.duration}</span>}
                         </div>
                         <div style={{ fontSize: 9, color: "#888", marginBottom: 4 }}>{c.ep}</div>
-                        <div style={{ fontSize: 12, fontWeight: 800, lineHeight: 1.2, marginBottom: 4, color: "#fff" }}>{c.title}</div>
-                        <div style={{ fontSize: 10, color: "#888", marginBottom: 8 }}>{c.desc || c.description}</div>
+                        <div className="clamp-2" style={{ fontSize: 13, fontWeight: 800, lineHeight: 1.2, marginBottom: 4, color: "#fff", minHeight: 31 }}>{c.title}</div>
+                        <div className="clamp-1" style={{ fontSize: 10, color: "#888", marginBottom: 8, minHeight: 13 }}>{c.desc || c.description}</div>
                         <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
                           <span style={{ background: "#EF4444", color: "white", fontSize: 8, fontWeight: 800, padding: "2px 6px", borderRadius: 4 }}>{c.tag}</span>
                           <span style={{ fontSize: 9, color: "#888" }}>⏱ {c.duration}</span>
@@ -762,8 +771,21 @@ const filteredScores = scores.filter(g =>
                       </div>
                     </a>
                   );
-                })}
-              </div>
+                };
+                const shelves = [
+                  { title: "SHORTS", emoji: "📱", items: filteredClips.filter(isTT) },
+                  { title: "FULL EPISODES", emoji: "🎙️", items: filteredClips.filter(c => !isTT(c)) },
+                ];
+                return shelves.filter(sh => sh.items.length).map(sh => (
+                  <div key={sh.title} style={{ marginTop: 14 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "0 16px 10px" }}>
+                      <span style={{ fontSize: 15, fontWeight: 900, letterSpacing: 1 }}>{sh.emoji} {sh.title}</span>
+                      <span style={{ background: "#1f1f1f", color: "#888", fontSize: 10, fontWeight: 800, padding: "2px 7px", borderRadius: 10 }}>{sh.items.length}</span>
+                    </div>
+                    <div className="clip-shelf">{sh.items.map(renderClip)}</div>
+                  </div>
+                ));
+              })()}
             </div>
           )}
 
