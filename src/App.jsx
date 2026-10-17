@@ -336,10 +336,14 @@ try {
     fetchNews();
   }, []);
 
+  // College football always leads the slate; everything else keeps its normal order
+  const FEATURED_SPORT = "NCAAF";
+  const featuredFirst = (a, b) => (b.sportConfig.label === FEATURED_SPORT) - (a.sportConfig.label === FEATURED_SPORT);
+
   const filteredGames = games.filter(g => 
   g.sportConfig.label !== "UFC" && g.sportConfig.label !== "GOLF" &&
   (activeSport === "ALL" || g.sportConfig.label === activeSport)
-);
+).sort(featuredFirst);
 
 const filteredScores = scores.filter(g =>
   g.sportConfig.label !== "UFC" && g.sportConfig.label !== "GOLF" &&
@@ -347,6 +351,8 @@ const filteredScores = scores.filter(g =>
 ).sort((a, b) => {
   const dateA = new Date(a.commence_time).getTime();
   const dateB = new Date(b.commence_time).getTime();
+  const featured = featuredFirst(a, b);
+  if (featured !== 0) return featured;
   if (isNaN(dateA)) return 1;
   if (isNaN(dateB)) return -1;
   return dateB - dateA;
